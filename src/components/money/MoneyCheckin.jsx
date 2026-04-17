@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MONEY_SYSTEM_PROMPT } from '../../data/moneyData'
-import { buildBudgetContext, SYSTEM_GROUPS } from '../../services/ynab'
+import { buildBudgetContext } from '../../services/ynab'
+import { SYSTEM_GROUPS } from '../../data/moneyData'
 import { Bow, MicroMotifs } from '../Decorations'
 
 export default function MoneyCheckin({ onSave, onClose, ynabData }) {
