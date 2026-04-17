@@ -77,13 +77,13 @@ function WeekGrid() {
 
 // ── Main tab ─────────────────────────────────────
 export default function MindTab() {
-  const { done, toggle } = useRoutineCompletions()
+  const { done, complete, uncomplete } = useRoutineCompletions()
   const { saveCheckin, lastCheckin, daysSinceLast } = useCheckinHistory()
   const { statements, addStatement } = useIdentityStatements()
 
   const [view, setView]           = useState('overview') // 'overview' | 'checkin' | 'identity'
 
-  const allDone = ROUTINES.every(r => r.optional || done[r.id])
+  const allDone = ROUTINES.every(r => r.optional || !!done[r.id])
 
   if (view === 'checkin') {
     return (
@@ -163,8 +163,9 @@ export default function MindTab() {
           <MindRoutineCard
             key={routine.id}
             routine={routine}
-            done={!!done[routine.id]}
-            onToggle={toggle}
+            done={done[routine.id] || false}
+            onComplete={complete}
+            onUncomplete={uncomplete}
           />
         ))}
 

@@ -8,20 +8,29 @@ function loadJSON(key, fallback) {
 }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)) }
 
-// Routine completions keyed by date → { routineId: true }
+// Routine completions keyed by date → { routineId: 'fully'|'mostly'|'showed_up' }
 export function useRoutineCompletions() {
   const key = `mind:completions:${todayKey()}`
   const [done, setDone] = useState(() => loadJSON(key, {}))
 
-  const toggle = useCallback((routineId) => {
+  const complete = useCallback((routineId, quality) => {
     setDone(prev => {
-      const next = { ...prev, [routineId]: !prev[routineId] }
+      const next = { ...prev, [routineId]: quality }
       saveJSON(key, next)
       return next
     })
   }, [key])
 
-  return { done, toggle }
+  const uncomplete = useCallback((routineId) => {
+    setDone(prev => {
+      const next = { ...prev }
+      delete next[routineId]
+      saveJSON(key, next)
+      return next
+    })
+  }, [key])
+
+  return { done, complete, uncomplete }
 }
 
 // Weekly check-in history
