@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Wallet, BookOpen, Flower2 } from 'lucide-react'
+import { Wallet, BookOpen, Flower2, Target } from 'lucide-react'
 import LowEffortMode from '../components/LowEffortMode'
 import RoutineCard from '../components/RoutineCard'
 import TaskSection from '../components/home/TaskSection'
+import GoalsView from './GoalsView'
 import { Bow, Wings, OrnateDivider, MotifCluster, MicroMotifs } from '../components/Decorations'
 import { useCheckinDismissal } from '../hooks/useHomeTasks'
 
@@ -23,9 +24,14 @@ function formatDate() {
 
 export default function HomeTab() {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
+  const [view, setView]                   = useState('home') // 'home' | 'goals'
   const { dismissed, dismiss }            = useCheckinDismissal()
   const { text, sub } = getGreeting()
   const dateStr = formatDate()
+
+  if (view === 'goals') {
+    return <GoalsView onBack={() => setView('home')} />
+  }
 
   return (
     <div className="fade-up">
@@ -138,6 +144,33 @@ export default function HomeTab() {
         <div style={{ margin: '1.2rem 0 1rem' }}>
           <OrnateDivider />
         </div>
+
+        {/* ── Goals entry card ── */}
+        <button
+          onClick={() => setView('goals')}
+          className="card card-accent"
+          style={{
+            width: '100%', textAlign: 'left', cursor: 'pointer',
+            padding: '1rem 1.25rem', marginBottom: '0.9rem',
+            display: 'flex', alignItems: 'center', gap: '0.85rem',
+            background: 'linear-gradient(135deg, rgba(244,194,194,0.13) 0%, rgba(253,240,240,0.6) 100%)',
+            border: '1.5px solid rgba(232,160,160,0.28)',
+            borderRadius: '1.25rem', boxShadow: '0 2px 14px rgba(232,160,160,0.1)',
+          }}
+        >
+          <div style={{
+            width: '2.4rem', height: '2.4rem', borderRadius: '0.75rem',
+            background: 'linear-gradient(135deg, var(--rose), rgba(244,194,194,0.6))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Target size={15} strokeWidth={1.75} color="#fff" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)', margin: '0 0 0.15rem' }}>Goals</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--steel)', margin: 0 }}>Net worth, steps, weight, cooking & more</p>
+          </div>
+          <MicroMotifs count={3} />
+        </button>
 
         {/* ── Coming soon cards ── */}
         <div className="card card-accent" style={{
