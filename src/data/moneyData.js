@@ -18,6 +18,19 @@ When she checks in:
 - Never say 'great job', 'amazing', 'wonderful', or 'fantastic'
 - No bullet points. Paragraph breaks are fine.`
 
+// The only categories shown in the budget snapshot.
+// Matched case-insensitively against your YNAB category names.
+export const VARIABLE_CATEGORIES = [
+  'Restaurants',
+  'Groceries',
+  'Bars/Booze',
+  'Personal Care',
+  'Shopping/Stuff',
+  'Travel/Vacations',
+  'Entertainment',
+  'Recreation/Leisure',
+]
+
 // YNAB category groups that are always hidden (system/internal groups)
 export const SYSTEM_GROUPS = [
   'Internal Master Category',

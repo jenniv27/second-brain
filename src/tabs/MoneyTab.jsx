@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react'
 import { useYNABData, useMoneyCheckins } from '../hooks/useMoneyData'
 import {
   getToken, setToken, getBudgetId, setBudgetId,
-  fetchBudgets, clearCredentials, formatUSD, toUSD,
+  fetchBudgets, clearCredentials,
 } from '../services/ynab'
 import BudgetSnapshot from '../components/money/BudgetSnapshot'
 import MoneyCheckin from '../components/money/MoneyCheckin'
@@ -212,11 +212,7 @@ export default function MoneyTab() {
   }
 
   // ── Overview screen ──
-  const month        = data?.month
-  const readyRaw     = month?.to_be_budgeted ?? null
-  const readyAmt     = readyRaw !== null ? toUSD(readyRaw) : null
-  const readyLabel   = readyRaw !== null ? formatUSD(readyRaw) : null
-  const readyOver    = readyAmt !== null && readyAmt < 0
+  const month = data?.month
 
   return (
     <div className="fade-up">
@@ -236,15 +232,6 @@ export default function MoneyTab() {
         <h1 style={{ fontFamily: 'Lora, Georgia, serif', fontSize: '1.6rem', fontWeight: 500, color: 'var(--text-dark)', margin: '0 0 0.5rem', lineHeight: 1.2 }}>
           Your budget <span className="star-accent" style={{ fontSize: '0.9rem' }}>✦</span>
         </h1>
-
-        {/* Ready to assign pill */}
-        {readyLabel && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: readyOver ? 'rgba(232,130,130,0.12)' : 'rgba(232,160,160,0.12)', borderRadius: '2rem', padding: '0.3rem 0.75rem', border: `1px solid ${readyOver ? 'rgba(232,130,130,0.3)' : 'rgba(232,160,160,0.3)'}` }}>
-            <span style={{ fontSize: '0.68rem', color: readyOver ? 'var(--rose)' : 'var(--steel)' }}>
-              {readyOver ? `${readyLabel} over-assigned` : `${readyLabel} ready to assign`}
-            </span>
-          </div>
-        )}
 
         {/* Refresh button */}
         <button
