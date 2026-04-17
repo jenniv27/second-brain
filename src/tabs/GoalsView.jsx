@@ -6,6 +6,7 @@ import WeightModule     from '../components/goals/WeightModule'
 import CookingModule    from '../components/goals/CookingModule'
 import SocialModule     from '../components/goals/SocialModule'
 import MandarinModule   from '../components/goals/MandarinModule'
+import WaterModule      from '../components/goals/WaterModule'
 import { OrnateDivider, MicroMotifs, Wings, Bow } from '../components/Decorations'
 
 function Section({ children }) {
@@ -82,6 +83,10 @@ export default function GoalsView({ onBack }) {
 
         <Section>
           <StepsModule />
+        </Section>
+
+        <Section>
+          <WaterModule />
         </Section>
 
         <div style={{ margin: '0.2rem 0' }}>
