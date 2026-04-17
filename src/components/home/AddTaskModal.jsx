@@ -1,18 +1,27 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 
+const TYPES = [
+  { value: 'task',    label: 'Task' },
+  { value: 'want-to', label: 'Want to' },
+]
+
 export default function AddTaskModal({ onSave, onClose }) {
+  const [taskType, setTaskType]       = useState('task')
   const [title, setTitle]             = useState('')
   const [hasDeadline, setHasDeadline] = useState(false)
   const [deadlineDate, setDate]       = useState('')
-  const [deadlineType, setType]       = useState('soft') // 'soft' | 'hard'
+  const [deadlineType, setType]       = useState('soft')
+
+  const isWantTo = taskType === 'want-to'
 
   function handleSave() {
     if (!title.trim()) return
     onSave({
       title,
+      type: taskType,
       deadline: hasDeadline && deadlineDate
-        ? { date: deadlineDate, type: deadlineType }
+        ? { date: deadlineDate, type: isWantTo ? 'soft' : deadlineType }
         : null,
     })
     onClose()
@@ -45,6 +54,29 @@ export default function AddTaskModal({ onSave, onClose }) {
           padding: '1.4rem 1.25rem 1.2rem',
         }}
       >
+        {/* Type toggle */}
+        <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem' }}>
+          {TYPES.map(t => (
+            <button
+              key={t.value}
+              onClick={() => setTaskType(t.value)}
+              style={{
+                flex: 1,
+                padding: '0.45rem',
+                borderRadius: '0.75rem',
+                border: `1px solid ${taskType === t.value ? 'var(--rose)' : 'rgba(232,160,160,0.25)'}`,
+                background: taskType === t.value ? 'rgba(232,160,160,0.12)' : 'transparent',
+                fontSize: '0.78rem',
+                fontWeight: 500,
+                color: taskType === t.value ? 'var(--rose)' : 'var(--steel)',
+                cursor: 'pointer',
+              }}
+            >
+              {t.value === 'want-to' ? '✦ ' : ''}{t.label}
+            </button>
+          ))}
+        </div>
+
         <p style={{
           fontFamily: 'Lora, Georgia, serif',
           fontSize: '1rem',
@@ -52,7 +84,7 @@ export default function AddTaskModal({ onSave, onClose }) {
           color: 'var(--text-dark)',
           margin: '0 0 1rem',
         }}>
-          What's on your mind?
+          {isWantTo ? 'What do you want to do?' : 'What's on your mind?'}
         </p>
 
         {/* Title */}
@@ -62,7 +94,7 @@ export default function AddTaskModal({ onSave, onClose }) {
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
-          placeholder="Task or intention…"
+          placeholder={isWantTo ? 'Something you've been meaning to…' : 'Task or intention…'}
           style={{
             width: '100%',
             background: 'rgba(244,194,194,0.08)',
@@ -71,7 +103,8 @@ export default function AddTaskModal({ onSave, onClose }) {
             padding: '0.7rem 0.9rem',
             fontSize: '0.9rem',
             color: 'var(--text-dark)',
-            fontFamily: 'Lora, Georgia, serif',
+            fontFamily: isWantTo ? 'Lora, Georgia, serif' : 'inherit',
+            fontStyle: isWantTo ? 'italic' : 'normal',
             outline: 'none',
             boxSizing: 'border-box',
             marginBottom: '0.85rem',
@@ -101,7 +134,7 @@ export default function AddTaskModal({ onSave, onClose }) {
             border: `1.5px solid ${hasDeadline ? 'var(--rose)' : 'rgba(232,160,160,0.4)'}`,
             background: hasDeadline ? 'var(--rose)' : 'transparent',
           }} />
-          Add deadline
+          {isWantTo ? 'Add a soft date' : 'Add deadline'}
         </button>
 
         {hasDeadline && (
@@ -120,32 +153,34 @@ export default function AddTaskModal({ onSave, onClose }) {
                 color: 'var(--text-dark)',
                 outline: 'none',
                 boxSizing: 'border-box',
-                marginBottom: '0.6rem',
+                marginBottom: isWantTo ? 0 : '0.6rem',
               }}
             />
-            {/* Soft / Hard toggle */}
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              {['soft', 'hard'].map(type => (
-                <button
-                  key={type}
-                  onClick={() => setType(type)}
-                  style={{
-                    flex: 1,
-                    padding: '0.4rem',
-                    borderRadius: '0.65rem',
-                    border: `1px solid ${deadlineType === type ? 'var(--rose)' : 'rgba(232,160,160,0.25)'}`,
-                    background: deadlineType === type ? 'rgba(232,160,160,0.12)' : 'transparent',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
-                    color: deadlineType === type ? 'var(--rose)' : 'var(--steel)',
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
+            {/* Soft / Hard toggle — tasks only */}
+            {!isWantTo && (
+              <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.6rem' }}>
+                {['soft', 'hard'].map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setType(type)}
+                    style={{
+                      flex: 1,
+                      padding: '0.4rem',
+                      borderRadius: '0.65rem',
+                      border: `1px solid ${deadlineType === type ? 'var(--rose)' : 'rgba(232,160,160,0.25)'}`,
+                      background: deadlineType === type ? 'rgba(232,160,160,0.12)' : 'transparent',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: deadlineType === type ? 'var(--rose)' : 'var(--steel)',
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

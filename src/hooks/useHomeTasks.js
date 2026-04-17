@@ -7,12 +7,22 @@ function loadJSON(key, fallback) {
 }
 function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)) }
 
+// For regular tasks
 export const REFLECTION_QUESTIONS = [
   'What made this possible?',
   'What would you do differently?',
   'What did finishing this feel like?',
   'Who helped, even indirectly?',
   'What did you learn from this one?',
+]
+
+// For want-to tasks — warmer, curiosity-focused
+export const WANT_TO_QUESTIONS = [
+  'How did it feel to make time for this?',
+  'What did you notice while you were doing it?',
+  'What surprised you about this one?',
+  'Did this give you energy or ask for it?',
+  'What would you want to remember about doing this?',
 ]
 
 function sortTasks(tasks) {
@@ -34,11 +44,12 @@ function sortTasks(tasks) {
 export function useHomeTasks() {
   const [tasks, setTasks] = useState(() => loadJSON(TASKS_KEY, []))
 
-  function addTask({ title, deadline }) {
+  function addTask({ title, deadline, type = 'task' }) {
     const next = [
       {
         id: `task-${Date.now()}`,
         title: title.trim(),
+        type, // 'task' | 'want-to'
         deadline: deadline || null, // { date: 'YYYY-MM-DD', type: 'soft'|'hard' }
         createdAt: new Date().toISOString(),
         archived: false,

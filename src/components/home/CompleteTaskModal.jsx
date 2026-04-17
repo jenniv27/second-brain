@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { REFLECTION_QUESTIONS } from '../../hooks/useHomeTasks'
+import { REFLECTION_QUESTIONS, WANT_TO_QUESTIONS } from '../../hooks/useHomeTasks'
 import { MicroMotifs } from '../Decorations'
 
 export default function CompleteTaskModal({ task, onComplete, onClose }) {
@@ -8,9 +8,10 @@ export default function CompleteTaskModal({ task, onComplete, onClose }) {
 
   // Pick a question deterministically based on task id so it doesn't shift on re-render
   const question = useMemo(() => {
-    const idx = task.id.split('').reduce((s, c) => s + c.charCodeAt(0), 0)
-    return REFLECTION_QUESTIONS[idx % REFLECTION_QUESTIONS.length]
-  }, [task.id])
+    const pool = task.type === 'want-to' ? WANT_TO_QUESTIONS : REFLECTION_QUESTIONS
+    const idx  = task.id.split('').reduce((s, c) => s + c.charCodeAt(0), 0)
+    return pool[idx % pool.length]
+  }, [task.id, task.type])
 
   return createPortal(
     <div

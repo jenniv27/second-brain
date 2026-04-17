@@ -20,9 +20,10 @@ function formatDeadline(deadline) {
 
 function TaskRow({ task, onComplete }) {
   const [completing, setCompleting] = useState(false)
-  const label   = formatDeadline(task.deadline)
-  const isHard  = task.deadline?.type === 'hard'
-  const overdue = label === 'Overdue'
+  const label    = formatDeadline(task.deadline)
+  const isHard   = task.deadline?.type === 'hard'
+  const overdue  = label === 'Overdue'
+  const isWantTo = task.type === 'want-to'
 
   return (
     <>
@@ -46,21 +47,27 @@ function TaskRow({ task, onComplete }) {
           onClick={() => setCompleting(true)}
           style={{
             width: '1.2rem', height: '1.2rem',
-            borderRadius: '50%',
-            border: '1.5px solid rgba(232,160,160,0.4)',
+            borderRadius: isWantTo ? '3px' : '50%',
+            border: `1.5px solid ${isWantTo ? 'rgba(232,160,160,0.35)' : 'rgba(232,160,160,0.4)'}`,
             background: 'transparent',
             flexShrink: 0,
             cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.55rem',
+            color: 'rgba(232,160,160,0.5)',
             transition: 'all 0.2s ease',
           }}
-        />
+        >
+          {isWantTo ? '✦' : ''}
+        </button>
 
         {/* Title */}
         <p style={{
           flex: 1,
-          fontSize: '0.85rem',
-          color: 'var(--text-dark)',
+          fontSize: isWantTo ? '0.83rem' : '0.85rem',
+          fontFamily: isWantTo ? 'Lora, Georgia, serif' : 'inherit',
+          fontStyle: isWantTo ? 'italic' : 'normal',
+          color: isWantTo ? 'var(--text-mid)' : 'var(--text-dark)',
           margin: 0,
           lineHeight: 1.35,
         }}>
@@ -69,26 +76,20 @@ function TaskRow({ task, onComplete }) {
 
         {/* Deadline */}
         {label && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            flexShrink: 0,
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexShrink: 0 }}>
             {isHard && (
               <span style={{
                 width: '0.35rem', height: '0.35rem',
                 borderRadius: '50%',
                 background: overdue ? 'rgba(232,130,130,0.8)' : 'var(--rose)',
-                display: 'inline-block',
-                flexShrink: 0,
+                display: 'inline-block', flexShrink: 0,
               }} />
             )}
             <span style={{
               fontSize: '0.7rem',
               color: overdue ? 'var(--rose)' : isHard ? 'var(--rose)' : 'var(--steel)',
               opacity: overdue ? 1 : isHard ? 0.85 : 0.75,
-              fontStyle: isHard ? 'normal' : 'italic',
+              fontStyle: 'italic',
             }}>
               {label}
             </span>
