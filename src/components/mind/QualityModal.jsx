@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { MicroMotifs } from '../Decorations'
 
 const OPTIONS = [
@@ -7,7 +8,7 @@ const OPTIONS = [
 ]
 
 export default function QualityModal({ routineName, onSelect, onDismiss }) {
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -93,6 +94,7 @@ export default function QualityModal({ routineName, onSelect, onDismiss }) {
           ))}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
