@@ -4,6 +4,7 @@ import HomeTab from './tabs/HomeTab'
 import BodyTab from './tabs/BodyTab'
 import MindTab from './tabs/MindTab'
 import PlaceholderTab from './tabs/PlaceholderTab'
+import MoneyTab from './tabs/MoneyTab'
 
 const TABS = [
   { id: 'home',   label: 'Home',   icon: '🏠' },
@@ -24,7 +25,7 @@ function App() {
         {activeTab === 'home'  && <HomeTab />}
         {activeTab === 'body'  && <BodyTab />}
         {activeTab === 'mind'  && <MindTab />}
-        {activeTab === 'money' && <PlaceholderTab name="Money" icon="💫" />}
+        {activeTab === 'money' && <MoneyTab />}
         {activeTab === 'learn' && <PlaceholderTab name="Learn" icon="🌙" />}
         {activeTab === 'world' && <PlaceholderTab name="World" icon="🌍" />}
         {activeTab === 'read'  && <PlaceholderTab name="Read" icon="📖" />}
