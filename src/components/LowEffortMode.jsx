@@ -2,18 +2,23 @@ import { useState } from 'react'
 import { Sun, Cloud, CloudRain } from 'lucide-react'
 
 const OPTIONS = [
-  { Icon: Sun,      label: 'Pretty good', value: 'good' },
-  { Icon: Cloud,    label: 'Getting by',  value: 'okay' },
+  { Icon: Sun,       label: 'Pretty good', value: 'good' },
+  { Icon: Cloud,     label: 'Getting by',  value: 'okay' },
   { Icon: CloudRain, label: 'Rough today', value: 'hard' },
 ]
 
-export default function LowEffortMode({ onClose }) {
+export default function LowEffortMode({ onClose, onComplete }) {
   const [selected, setSelected] = useState(null)
-  const [logged, setLogged] = useState(false)
+  const [logged, setLogged]     = useState(false)
 
   function handleSelect(value) {
     setSelected(value)
     setTimeout(() => setLogged(true), 600)
+  }
+
+  function handleClose() {
+    if (logged && onComplete) onComplete()
+    onClose()
   }
 
   if (logged) {
@@ -32,7 +37,7 @@ export default function LowEffortMode({ onClose }) {
           That's enough. You showed up.
         </p>
         <button
-          onClick={onClose}
+          onClick={handleClose}
           style={{
             background: 'none',
             border: 'none',
@@ -103,11 +108,7 @@ export default function LowEffortMode({ onClose }) {
               transform: selected === value ? 'scale(1.04)' : 'scale(1)',
             }}
           >
-            <Icon
-              size={22}
-              strokeWidth={1.5}
-              color={selected === value ? 'var(--rose)' : 'var(--steel)'}
-            />
+            <Icon size={22} strokeWidth={1.5} color={selected === value ? 'var(--rose)' : 'var(--steel)'} />
             <span style={{
               fontSize: '0.7rem',
               color: selected === value ? 'var(--text-dark)' : 'var(--text-mid)',
