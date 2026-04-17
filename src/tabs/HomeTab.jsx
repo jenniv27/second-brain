@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Wallet, BookOpen, Flower2, Target } from 'lucide-react'
+import { BookOpen, Flower2, Target } from 'lucide-react'
 import LowEffortMode from '../components/LowEffortMode'
 import RoutineCard from '../components/RoutineCard'
 import TaskSection from '../components/home/TaskSection'
+import HomeBudgetCard from '../components/home/HomeBudgetCard'
 import GoalsView from './GoalsView'
 import { Bow, Wings, OrnateDivider, MotifCluster, MicroMotifs } from '../components/Decorations'
 import { useCheckinDismissal } from '../hooks/useHomeTasks'
@@ -22,7 +23,7 @@ function formatDate() {
   })
 }
 
-export default function HomeTab() {
+export default function HomeTab({ onGoToMoney }) {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
   const [view, setView]                   = useState('home') // 'home' | 'goals'
   const { dismissed, dismiss }            = useCheckinDismissal()
@@ -173,23 +174,7 @@ export default function HomeTab() {
         </button>
 
         {/* ── Coming soon cards ── */}
-        <div className="card card-accent" style={{
-          padding: '1rem 1.25rem', marginBottom: '0.9rem',
-          display: 'flex', alignItems: 'center', gap: '0.85rem',
-        }}>
-          <div style={{
-            width: '2.4rem', height: '2.4rem', borderRadius: '0.75rem',
-            background: 'linear-gradient(135deg, var(--pink), var(--base))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <Wallet size={16} strokeWidth={1.5} color="var(--rose)" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '0.82rem', fontWeight: 500, color: 'var(--text-dark)', margin: '0 0 0.15rem' }}>Budget snapshot</p>
-            <p style={{ fontSize: '0.75rem', color: 'var(--steel)', margin: 0 }}>Coming soon from your Money tab</p>
-          </div>
-          <MicroMotifs count={3} />
-        </div>
+        <HomeBudgetCard onGoToMoney={onGoToMoney} />
 
         <div className="card card-accent" style={{
           padding: '1rem 1.25rem', marginBottom: '1.25rem',
