@@ -66,10 +66,16 @@ export default function BudgetSnapshot({ categoryGroups }) {
   const allCategories = categoryGroups
     .filter(g => !g.hidden && !SYSTEM_GROUPS.includes(g.name))
     .flatMap(g => g.categories)
-    .filter(c => !c.hidden && c.budgeted !== 0)
 
-  // TEMP: show all categories so we can find the exact YNAB names
-  const visible = allCategories
+  // Filter to only the whitelisted names (case-insensitive)
+  const visible = VARIABLE_CATEGORIES
+    .map(name =>
+      allCategories.find(c =>
+        !c.hidden &&
+        c.name.toLowerCase() === name.toLowerCase()
+      )
+    )
+    .filter(Boolean)
 
   if (visible.length === 0) {
     return (

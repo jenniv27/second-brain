@@ -181,7 +181,7 @@ export default function MoneyTab() {
             Your budget <span className="star-accent" style={{ fontSize: '0.9rem' }}>✦</span>
           </h1>
         </header>
-        <SetupCard onComplete={() => setSetup(false)} />
+        <SetupCard onComplete={() => { setSetup(false); refresh() }} />
       </div>
     )
   }
