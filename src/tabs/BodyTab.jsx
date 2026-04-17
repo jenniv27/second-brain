@@ -11,6 +11,7 @@ import PhaseCard from '../components/body/PhaseCard'
 import ChecklistSection from '../components/body/ChecklistSection'
 import ExerciseLog from '../components/body/ExerciseLog'
 import SleepLog from '../components/body/SleepLog'
+import WaterModule from '../components/goals/WaterModule'
 import { OrnateDivider, MicroMotifs, Bow } from '../components/Decorations'
 
 // ── Reusable section card ──────────────────────
@@ -183,6 +184,11 @@ function MorningSession() {
           onToggle={toggleSkin}
           dim
         />
+      </SectionCard>
+
+      {/* Hydration */}
+      <SectionCard title="Hydration" accent>
+        <WaterModule />
       </SectionCard>
 
       {/* Wake time + feel */}
