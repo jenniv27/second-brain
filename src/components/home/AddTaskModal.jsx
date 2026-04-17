@@ -84,7 +84,7 @@ export default function AddTaskModal({ onSave, onClose }) {
           color: 'var(--text-dark)',
           margin: '0 0 1rem',
         }}>
-          {isWantTo ? 'What do you want to do?' : 'What's on your mind?'}
+          {isWantTo ? 'What do you want to do?' : "What's on your mind?"}
         </p>
 
         {/* Title */}
@@ -94,7 +94,7 @@ export default function AddTaskModal({ onSave, onClose }) {
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
-          placeholder={isWantTo ? 'Something you've been meaning to…' : 'Task or intention…'}
+          placeholder={isWantTo ? "Something you've been meaning to…" : 'Task or intention…'}
           style={{
             width: '100%',
             background: 'rgba(244,194,194,0.08)',
