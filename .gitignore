@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Local Claude settings
+.claude/settings.local.json
+
+# Product brief (kept local)
+jennifer-second-brain-brief.docx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
