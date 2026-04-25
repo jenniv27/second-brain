@@ -52,15 +52,19 @@ export default async function handler(req, res) {
 
   if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'no_key' })
 
+  // Detect whether input is pinyin (has tone marks or is Latin) or hanzi
+  const hasToneMarks = /[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(word)
+  const hasHanzi     = /[一-鿿㐀-䶿]/.test(word)
+  const isPinyin     = hasToneMarks || (!hasHanzi && /^[a-z\s]+$/i.test(word.trim()))
+
   // Generate with Claude
-  const prompt = `You are a Mandarin Chinese cultural context expert. Given a word or phrase and its basic definition, provide a rich but concise cultural note — the kind of context that makes a word memorable.
+  const prompt = `You are a Mandarin Chinese cultural context expert. Given a word or phrase${isPinyin ? ' (written in pinyin romanization)' : ''}, provide a rich but concise cultural note — the kind of context that makes a word memorable.
 
 Word: ${word}
 Definition: ${definition || '(not provided)'}
 
 Cover:
-- Literal character breakdown if it's a compound (brief)
-- Cultural background or origin that makes this word interesting
+${!isPinyin ? '- Literal character breakdown if it\'s a compound (brief)\n' : ''}- Cultural background or origin that makes this word interesting
 - How it's actually used day-to-day vs formal settings
 - Any related expressions, idioms, or tones of note
 

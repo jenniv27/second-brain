@@ -49,7 +49,7 @@ export default function CulturalContextTool() {
           Cultural context
         </p>
         <p style={{ margin: '0.15rem 0 0', fontSize: '0.8rem', color: 'var(--text-mid)', fontStyle: 'italic', fontFamily: 'Lora, Georgia, serif' }}>
-          Paste a word or phrase from HelloChinese
+          Look up any word in pinyin or hanzi
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default function CulturalContextTool() {
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="e.g. 加油 or 入乡随俗"
+            placeholder="e.g. jiā yóu or 加油"
             disabled={loading}
             style={{
               flex: 1,
