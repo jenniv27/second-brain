@@ -4,6 +4,7 @@ import LowEffortMode from '../components/LowEffortMode'
 import RoutineCard from '../components/RoutineCard'
 import TaskSection from '../components/home/TaskSection'
 import HomeBudgetCard from '../components/home/HomeBudgetCard'
+import SleepCard from '../components/home/SleepCard'
 import GoalsView from './GoalsView'
 import { Bow, Wings, OrnateDivider, MotifCluster, MicroMotifs } from '../components/Decorations'
 import { useCheckinDismissal } from '../hooks/useHomeTasks'
@@ -23,7 +24,7 @@ function formatDate() {
   })
 }
 
-export default function HomeTab({ onGoToMoney }) {
+export default function HomeTab({ onGoToMoney, onGoToBody }) {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
   const [view, setView]                   = useState('home') // 'home' | 'goals'
   const { dismissed, dismiss }            = useCheckinDismissal()
@@ -172,6 +173,9 @@ export default function HomeTab({ onGoToMoney }) {
           </div>
           <MicroMotifs count={3} />
         </button>
+
+        {/* ── Sleep card ── */}
+        <SleepCard onGoToBody={onGoToBody} />
 
         {/* ── Coming soon cards ── */}
         <HomeBudgetCard onGoToMoney={onGoToMoney} />

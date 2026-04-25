@@ -23,7 +23,7 @@ function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="scroll-area">
-        {activeTab === 'home'  && <HomeTab onGoToMoney={() => setActiveTab('money')} />}
+        {activeTab === 'home'  && <HomeTab onGoToMoney={() => setActiveTab('money')} onGoToBody={() => setActiveTab('body')} />}
         {activeTab === 'body'  && <BodyTab />}
         {activeTab === 'mind'  && <MindTab />}
         {activeTab === 'money' && <MoneyTab />}
