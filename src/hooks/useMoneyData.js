@@ -5,7 +5,9 @@ import {
   getToken,
   getBudgetId,
 } from '../services/ynab'
+import * as storage from '../services/storage'
 
+// YNAB cache stays in localStorage only — it's a short-lived API cache, not user data
 const CACHE_KEY = 'money:ynab_cache'
 const CACHE_TTL = 60 * 60 * 1000 // 1 hour
 
@@ -25,8 +27,7 @@ function setCache(data) {
   localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }))
 }
 
-// ── YNAB data hook ────────────────────────────
-
+// ── YNAB data hook ────────────────────────────────────────────────
 export function useYNABData() {
   const [data, setData]       = useState(() => getCached())
   const [loading, setLoading] = useState(false)
@@ -66,17 +67,20 @@ export function useYNABData() {
   return { data, loading, error, refresh: () => load(true) }
 }
 
-// ── Money check-in history hook ───────────────
-
+// ── Money check-in history ────────────────────────────────────────
 export function useMoneyCheckins() {
-  const [checkins, setCheckins] = useState(() =>
-    JSON.parse(localStorage.getItem('money:checkins') || '[]')
-  )
+  const [checkins, setCheckins] = useState(() => storage.cacheRead('money:checkins', []))
+
+  useEffect(() => {
+    storage.getItem('money:checkins', []).then(setCheckins)
+  }, [])
 
   function saveCheckin(entry) {
-    const updated = [entry, ...checkins].slice(0, 52) // keep ~1 year
-    localStorage.setItem('money:checkins', JSON.stringify(updated))
-    setCheckins(updated)
+    setCheckins(prev => {
+      const updated = [entry, ...prev].slice(0, 52)
+      storage.setItem('money:checkins', updated)
+      return updated
+    })
   }
 
   const last = checkins[0] ?? null

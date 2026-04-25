@@ -1,22 +1,24 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import * as storage from '../services/storage'
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10)
 }
-function loadJSON(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
-}
-function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)) }
 
-// Routine completions keyed by date → { routineId: 'fully'|'mostly'|'showed_up' }
+// ── Routine completions ──────────────────────────────────────────
+// Keyed by date → { routineId: 'fully'|'mostly'|'showed_up' }
 export function useRoutineCompletions() {
   const key = `mind:completions:${todayKey()}`
-  const [done, setDone] = useState(() => loadJSON(key, {}))
+  const [done, setDone] = useState(() => storage.cacheRead(key, {}))
+
+  useEffect(() => {
+    storage.getItem(key, {}).then(setDone)
+  }, [key])
 
   const complete = useCallback((routineId, quality) => {
     setDone(prev => {
       const next = { ...prev, [routineId]: quality }
-      saveJSON(key, next)
+      storage.setItem(key, next)
       return next
     })
   }, [key])
@@ -25,7 +27,7 @@ export function useRoutineCompletions() {
     setDone(prev => {
       const next = { ...prev }
       delete next[routineId]
-      saveJSON(key, next)
+      storage.setItem(key, next)
       return next
     })
   }, [key])
@@ -33,14 +35,18 @@ export function useRoutineCompletions() {
   return { done, complete, uncomplete }
 }
 
-// Weekly check-in history
+// ── Weekly check-in history ──────────────────────────────────────
 export function useCheckinHistory() {
-  const [history, setHistory] = useState(() => loadJSON('mind:checkins', []))
+  const [history, setHistory] = useState(() => storage.cacheRead('mind:checkins', []))
+
+  useEffect(() => {
+    storage.getItem('mind:checkins', []).then(setHistory)
+  }, [])
 
   function saveCheckin(entry) {
     setHistory(prev => {
-      const next = [entry, ...prev].slice(0, 52) // keep 1 year
-      saveJSON('mind:checkins', next)
+      const next = [entry, ...prev].slice(0, 52)
+      storage.setItem('mind:checkins', next)
       return next
     })
   }
@@ -53,14 +59,18 @@ export function useCheckinHistory() {
   return { history, saveCheckin, lastCheckin, daysSinceLast }
 }
 
-// Identity statements (auto-populated by companion over time)
+// ── Identity statements ──────────────────────────────────────────
 export function useIdentityStatements() {
-  const [statements, setStatements] = useState(() => loadJSON('mind:identity', []))
+  const [statements, setStatements] = useState(() => storage.cacheRead('mind:identity', []))
+
+  useEffect(() => {
+    storage.getItem('mind:identity', []).then(setStatements)
+  }, [])
 
   function addStatement(text) {
     setStatements(prev => {
       const next = [...prev, { text, addedAt: todayKey() }]
-      saveJSON('mind:identity', next)
+      storage.setItem('mind:identity', next)
       return next
     })
   }

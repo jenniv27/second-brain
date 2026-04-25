@@ -1,29 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import { SUPPLEMENT_PHASES } from '../data/bodyData'
+import * as storage from '../services/storage'
 
 function todayKey() {
-  return new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  return new Date().toISOString().slice(0, 10)
 }
 
-function loadJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function saveJSON(key, value) {
-  localStorage.setItem(key, JSON.stringify(value))
-}
-
-// ── Phase state ──────────────────────────────
-// { phaseId: 'stimulant', startDate: 'YYYY-MM-DD' }
+// ── Phase state ──────────────────────────────────────────────────
 export function usePhase() {
   const [phase, setPhaseState] = useState(() =>
-    loadJSON('body:phase', { phaseId: 'stimulant', startDate: todayKey() })
+    storage.cacheRead('body:phase', { phaseId: 'stimulant', startDate: todayKey() })
   )
+
+  useEffect(() => {
+    storage.getItem('body:phase', { phaseId: 'stimulant', startDate: todayKey() })
+      .then(setPhaseState)
+  }, [])
 
   const currentPhase = SUPPLEMENT_PHASES.find(p => p.id === phase.phaseId) ?? SUPPLEMENT_PHASES[0]
 
@@ -37,22 +29,25 @@ export function usePhase() {
   function setPhase(phaseId) {
     const next = { phaseId, startDate: todayKey() }
     setPhaseState(next)
-    saveJSON('body:phase', next)
+    storage.setItem('body:phase', next)
   }
 
   return { phase: currentPhase, dayNumber, setPhase }
 }
 
-// ── Daily checklist ──────────────────────────
-// Keyed by date → { itemId: true/false }
+// ── Daily checklist ──────────────────────────────────────────────
 export function useChecklist(namespace) {
   const key = `body:${namespace}:${todayKey()}`
-  const [checked, setChecked] = useState(() => loadJSON(key, {}))
+  const [checked, setChecked] = useState(() => storage.cacheRead(key, {}))
+
+  useEffect(() => {
+    storage.getItem(key, {}).then(setChecked)
+  }, [key])
 
   const toggle = useCallback((id) => {
     setChecked(prev => {
       const next = { ...prev, [id]: !prev[id] }
-      saveJSON(key, next)
+      storage.setItem(key, next)
       return next
     })
   }, [key])
@@ -60,17 +55,21 @@ export function useChecklist(namespace) {
   return { checked, toggle }
 }
 
-// ── Exercise log ─────────────────────────────
+// ── Exercise log ─────────────────────────────────────────────────
 export function useExercise() {
   const key = `body:exercise:${todayKey()}`
   const [exercise, setExerciseState] = useState(() =>
-    loadJSON(key, { effort: null, note: '' })
+    storage.cacheRead(key, { effort: null, note: '' })
   )
+
+  useEffect(() => {
+    storage.getItem(key, { effort: null, note: '' }).then(setExerciseState)
+  }, [key])
 
   function setExercise(update) {
     setExerciseState(prev => {
       const next = { ...prev, ...update }
-      saveJSON(key, next)
+      storage.setItem(key, next)
       return next
     })
   }
@@ -78,17 +77,21 @@ export function useExercise() {
   return { exercise, setExercise }
 }
 
-// ── Sleep log ────────────────────────────────
+// ── Sleep log ────────────────────────────────────────────────────
 export function useSleep() {
   const key = `body:sleep:${todayKey()}`
   const [sleep, setSleepState] = useState(() =>
-    loadJSON(key, { bedtime: '', wakeTime: '', feel: null })
+    storage.cacheRead(key, { bedtime: '', wakeTime: '', feel: null })
   )
+
+  useEffect(() => {
+    storage.getItem(key, { bedtime: '', wakeTime: '', feel: null }).then(setSleepState)
+  }, [key])
 
   function setSleep(update) {
     setSleepState(prev => {
       const next = { ...prev, ...update }
-      saveJSON(key, next)
+      storage.setItem(key, next)
       return next
     })
   }
@@ -96,16 +99,20 @@ export function useSleep() {
   return { sleep, setSleep }
 }
 
-// ── Morning intention ────────────────────────
+// ── Morning intention ────────────────────────────────────────────
 export function useMorningIntention() {
   const key = `body:intention:${todayKey()}`
   const [intention, setIntentionState] = useState(() =>
-    loadJSON(key, '')
+    storage.cacheRead(key, '')
   )
+
+  useEffect(() => {
+    storage.getItem(key, '').then(setIntentionState)
+  }, [key])
 
   function setIntention(text) {
     setIntentionState(text)
-    saveJSON(key, text)
+    storage.setItem(key, text)
   }
 
   return { intention, setIntention }
