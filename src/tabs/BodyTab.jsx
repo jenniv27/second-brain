@@ -229,7 +229,6 @@ function EveningSession() {
   const { checked: suppChecked, toggle: toggleSupp } = useChecklist('supp')
   const { checked: skinChecked, toggle: toggleSkin } = useChecklist('skin-pm')
   const { exercise, setExercise } = useExercise()
-  const { sleep, setSleep } = useSleep()
   const [showToAdd, setShowToAdd] = useState(false)
 
   return (
@@ -290,11 +289,6 @@ function EveningSession() {
             />
           )}
         </div>
-      </SectionCard>
-
-      {/* Sleep log */}
-      <SectionCard title="Bedtime" defaultOpen={!sleep.bedtime}>
-        <SleepLog sleep={sleep} onUpdate={setSleep} showWakeTime={false} />
       </SectionCard>
 
       {/* Companion placeholder */}
