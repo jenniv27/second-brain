@@ -2,42 +2,6 @@
 //  Body tab data — supplements & skincare
 // ─────────────────────────────────────────────
 
-export const SUPPLEMENT_PHASES = [
-  {
-    id: 'stimulant',
-    name: 'Stimulant Phase',
-    totalDays: 14,
-    tagline: 'Fasting · Black Coffee · GCBE / Yohimbine',
-    color: '#e8b4a0',
-    items: [
-      { id: 'coffee',     label: 'Black coffee',    note: '1–2 cups',                         asNeeded: false },
-      { id: 'yohimbine',  label: 'Yohimbine',       note: '2.5 mg — or GCBE 500mg + Green Tea 256mg if needed', asNeeded: true },
-    ],
-  },
-  {
-    id: 'beauty',
-    name: 'Light / Beauty Phase',
-    totalDays: 12,
-    tagline: '5-HTP · Choline · Cayenne',
-    color: '#a0b4e8',
-    items: [
-      { id: '5htp',      label: '5-HTP',    note: '50 mg',  asNeeded: false },
-      { id: 'choline',   label: 'Choline',  note: '650 mg', asNeeded: false },
-      { id: 'cayenne',   label: 'Cayenne',  note: '530 mg', asNeeded: false },
-    ],
-  },
-  {
-    id: 'reset',
-    name: 'Reset Phase',
-    totalDays: 2,
-    tagline: 'Water & Electrolytes only',
-    color: '#a0c8e8',
-    items: [
-      { id: 'electrolytes', label: 'Electrolytes', note: 'as needed', asNeeded: true },
-    ],
-  },
-]
-
 // Morning only — collagen + glucomannan
 export const DAILY_SUPPLEMENTS_AM = [
   { id: 'collagen',  label: 'Collagen',        note: '30 min before first meal · 16 oz water' },
@@ -47,8 +11,6 @@ export const DAILY_SUPPLEMENTS_AM = [
 
 // Evening — everything else
 export const DAILY_SUPPLEMENTS_PM = [
-  { id: 'zinc',        label: 'Zinc',               note: '' },
-  { id: 'vitamin-d',   label: 'Vitamin D',           note: '' },
   { id: 'multi',       label: 'Multivitamin',        note: '' },
   { id: 'iron',        label: 'Iron',                note: '' },
   { id: 'magnesium',   label: 'Magnesium citrate',   note: '' },
@@ -71,7 +33,6 @@ export const SKINCARE_AM = [
 export const SKINCARE_PM = [
   { id: 'cleanser',     label: 'Clinique face cleanser',          note: 'once a week' },
   { id: 'ha',           label: 'Hyaluronic acid',                 note: '' },
-  { id: 'eye-bright',   label: 'Bye Bye Blemish under-eye',       note: '' },
   { id: 'retinol',      label: 'Retinol serum under eye',         note: '' },
   { id: 'revitalash',   label: 'RevitaLash',                      note: '' },
   { id: 'micro-serum',  label: 'Real Ferment micro serum',        note: '' },

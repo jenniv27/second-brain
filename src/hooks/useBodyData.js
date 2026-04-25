@@ -1,38 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { SUPPLEMENT_PHASES } from '../data/bodyData'
 import * as storage from '../services/storage'
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10)
-}
-
-// ── Phase state ──────────────────────────────────────────────────
-export function usePhase() {
-  const [phase, setPhaseState] = useState(() =>
-    storage.cacheRead('body:phase', { phaseId: 'stimulant', startDate: todayKey() })
-  )
-
-  useEffect(() => {
-    storage.getItem('body:phase', { phaseId: 'stimulant', startDate: todayKey() })
-      .then(setPhaseState)
-  }, [])
-
-  const currentPhase = SUPPLEMENT_PHASES.find(p => p.id === phase.phaseId) ?? SUPPLEMENT_PHASES[0]
-
-  const dayNumber = (() => {
-    const start = new Date(phase.startDate)
-    const today = new Date(todayKey())
-    const diff = Math.floor((today - start) / 86400000) + 1
-    return Math.min(Math.max(diff, 1), currentPhase.totalDays)
-  })()
-
-  function setPhase(phaseId) {
-    const next = { phaseId, startDate: todayKey() }
-    setPhaseState(next)
-    storage.setItem('body:phase', next)
-  }
-
-  return { phase: currentPhase, dayNumber, setPhase }
 }
 
 // ── Daily checklist ──────────────────────────────────────────────

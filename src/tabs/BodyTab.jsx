@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { Sun, Moon, ChevronDown, ChevronUp } from 'lucide-react'
 import {
-  SUPPLEMENT_PHASES, DAILY_SUPPLEMENTS_AM, DAILY_SUPPLEMENTS_PM, AFTERNOON_REMINDERS,
+  DAILY_SUPPLEMENTS_AM, DAILY_SUPPLEMENTS_PM, AFTERNOON_REMINDERS,
   SKINCARE_AM, SKINCARE_PM, SKINCARE_TO_ADD,
 } from '../data/bodyData'
 import {
-  usePhase, useChecklist, useExercise, useSleep, useMorningIntention,
+  useChecklist, useExercise, useSleep, useMorningIntention,
 } from '../hooks/useBodyData'
-import PhaseCard from '../components/body/PhaseCard'
 import ChecklistSection from '../components/body/ChecklistSection'
 import ExerciseLog from '../components/body/ExerciseLog'
 import SleepLog from '../components/body/SleepLog'
@@ -142,29 +141,13 @@ function SessionHeader({ session, onSwitch }) {
 
 // ── Morning session ────────────────────────────
 function MorningSession() {
-  const { phase, dayNumber, setPhase } = usePhase()
   const { checked: suppChecked,  toggle: toggleSupp  } = useChecklist('supp')
   const { checked: skinChecked,  toggle: toggleSkin  } = useChecklist('skin-am')
   const { sleep,  setSleep  } = useSleep()
   const { intention, setIntention } = useMorningIntention()
 
-  const phaseItems = SUPPLEMENT_PHASES.find(p => p.id === phase.id)?.items ?? []
-
   return (
     <div style={{ padding: '1rem 1.1rem 0' }}>
-
-      {/* Phase card */}
-      <PhaseCard phase={phase} dayNumber={dayNumber} onSetPhase={setPhase} />
-
-      {/* Phase supplements */}
-      <SectionCard title="Phase supplements" accent>
-        <ChecklistSection
-          items={phaseItems}
-          checked={suppChecked}
-          onToggle={toggleSupp}
-          dim
-        />
-      </SectionCard>
 
       {/* Morning supplements */}
       <SectionCard title="Morning supplements" accent>
