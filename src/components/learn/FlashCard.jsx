@@ -1,33 +1,34 @@
 import { useState, useEffect, useRef } from 'react'
-import { Volume2 } from 'lucide-react'
+import { Volume2, Pencil, Check, X } from 'lucide-react'
 import { MicroMotifs } from '../Decorations'
 import { playAudio } from '../../services/audioStorage'
 
-async function fetchCulturalContext(word, definition) {
-  const res = await fetch('/api/cultural-context', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ word, definition }),
-  })
-  if (!res.ok) throw new Error('failed')
-  return (await res.json()).context
-}
-
 export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
   const [flipped, setFlipped]           = useState(false)
-  const [context, setContext]           = useState(card.culturalContext ?? null)
-  const [contextLoading, setCtxLoading] = useState(false)
+  const [context, setContext]           = useState(card.culturalContext ?? '')
+  const [editing, setEditing]           = useState(false)
+  const [draft, setDraft]               = useState('')
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [done, setDone]                 = useState(false)
   const didAutoPlay = useRef(false)
+  const textareaRef = useRef(null)
 
   // Reset on card change
   useEffect(() => {
     setFlipped(false)
     setDone(false)
-    setContext(card.culturalContext ?? null)
+    setContext(card.culturalContext ?? '')
+    setEditing(false)
+    setDraft('')
     didAutoPlay.current = false
   }, [card.id])
+
+  // Focus textarea when editing starts
+  useEffect(() => {
+    if (editing && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [editing])
 
   async function handleAudio() {
     if (audioPlaying || !card.audioFile) return
@@ -45,20 +46,22 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
       didAutoPlay.current = true
       handleAudio()
     }
+  }
 
-    // Fetch cultural context if not already cached
-    if (!context) {
-      setCtxLoading(true)
-      try {
-        const ctx = await fetchCulturalContext(card.pinyin || card.definition, card.definition)
-        setContext(ctx)
-        onSaveCulturalContext?.(card.id, ctx)
-      } catch {
-        setContext('Cultural context unavailable right now.')
-      } finally {
-        setCtxLoading(false)
-      }
-    }
+  function startEditing() {
+    setDraft(context)
+    setEditing(true)
+  }
+
+  function saveEdit() {
+    setContext(draft)
+    onSaveCulturalContext?.(card.id, draft)
+    setEditing(false)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
+    setDraft('')
   }
 
   function handleNext() {
@@ -180,16 +183,83 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
               margin: '0 0 1rem',
             }} />
 
-            {/* Cultural context */}
-            <p style={{
-              fontSize: '0.65rem', fontWeight: 600,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'var(--rose)', margin: '0 0 0.5rem',
-            }}>
-              Cultural context
-            </p>
-            {contextLoading ? (
-              <p style={{ fontSize: '0.8rem', color: 'var(--steel)', fontStyle: 'italic' }}>Generating…</p>
+            {/* Cultural context — manually editable */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <p style={{
+                fontSize: '0.65rem', fontWeight: 600,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                color: 'var(--rose)', margin: 0,
+              }}>
+                Notes
+              </p>
+              {!editing && (
+                <button
+                  onClick={e => { e.stopPropagation(); startEditing() }}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '0.25rem',
+                    color: 'var(--steel)', fontSize: '0.7rem', padding: '0.1rem 0.3rem',
+                  }}
+                >
+                  <Pencil size={11} strokeWidth={1.75} />
+                  {context ? 'Edit' : 'Add note'}
+                </button>
+              )}
+            </div>
+
+            {editing ? (
+              <div onClick={e => e.stopPropagation()}>
+                <textarea
+                  ref={textareaRef}
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  placeholder="Paste pinyin, usage examples, memory tips…"
+                  rows={4}
+                  style={{
+                    width: '100%',
+                    fontSize: '0.82rem',
+                    fontFamily: 'Lora, Georgia, serif',
+                    fontStyle: 'italic',
+                    color: 'var(--text-mid)',
+                    lineHeight: 1.65,
+                    border: '1px solid rgba(232,160,160,0.4)',
+                    borderRadius: '0.6rem',
+                    padding: '0.6rem 0.75rem',
+                    resize: 'vertical',
+                    outline: 'none',
+                    background: '#fdf9f9',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={saveEdit}
+                    style={{
+                      flex: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+                      background: 'var(--rose)',
+                      border: 'none', borderRadius: '0.6rem',
+                      padding: '0.45rem',
+                      fontSize: '0.78rem', fontWeight: 600,
+                      color: 'white', cursor: 'pointer',
+                    }}
+                  >
+                    <Check size={13} strokeWidth={2.5} /> Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem',
+                      background: 'rgba(140,155,171,0.1)',
+                      border: '1px solid rgba(140,155,171,0.2)', borderRadius: '0.6rem',
+                      padding: '0.45rem 0.75rem',
+                      fontSize: '0.78rem', color: 'var(--steel)', cursor: 'pointer',
+                    }}
+                  >
+                    <X size={13} strokeWidth={2} /> Cancel
+                  </button>
+                </div>
+              </div>
             ) : context ? (
               <p style={{
                 fontSize: '0.82rem', color: 'var(--text-mid)',
@@ -199,7 +269,11 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
               }}>
                 {context}
               </p>
-            ) : null}
+            ) : (
+              <p style={{ fontSize: '0.78rem', color: 'var(--steel)', fontStyle: 'italic', margin: 0 }}>
+                No notes yet — tap "Add note" to paste in pinyin or a memory tip.
+              </p>
+            )}
           </div>
 
         </div>

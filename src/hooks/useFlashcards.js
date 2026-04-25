@@ -152,12 +152,36 @@ export function useFlashcards() {
     })
   }, [])
 
-  // Import new cards from parsed deck (skip duplicates by id)
+  // Import new cards from parsed deck (skip duplicates by id, definition, or pinyin)
   const importCards = useCallback((parsed) => {
     setCards(prev => {
-      const existing = new Set(prev.map(c => c.id))
-      const fresh    = parsed.filter(c => !existing.has(c.id))
-      const next     = [...prev, ...fresh]
+      const existingIds        = new Set(prev.map(c => c.id))
+      const existingDefs       = new Set(prev.map(c => c.definition?.toLowerCase().trim()).filter(Boolean))
+      const existingPinyins    = new Set(prev.map(c => c.pinyin?.toLowerCase().trim()).filter(Boolean))
+
+      // Also deduplicate within the incoming batch itself
+      const seenIds     = new Set()
+      const seenDefs    = new Set()
+      const seenPinyins = new Set()
+
+      const fresh = parsed.filter(c => {
+        const def    = c.definition?.toLowerCase().trim()
+        const pinyin = c.pinyin?.toLowerCase().trim()
+
+        if (existingIds.has(c.id))            return false
+        if (def    && existingDefs.has(def))   return false
+        if (pinyin && existingPinyins.has(pinyin)) return false
+        if (seenIds.has(c.id))                return false
+        if (def    && seenDefs.has(def))       return false
+        if (pinyin && seenPinyins.has(pinyin)) return false
+
+        seenIds.add(c.id)
+        if (def)    seenDefs.add(def)
+        if (pinyin) seenPinyins.add(pinyin)
+        return true
+      })
+
+      const next = [...prev, ...fresh]
       storage.setItem(CARDS_KEY, next)
       return next
     })
