@@ -3,102 +3,106 @@ import * as storage from '../services/storage'
 
 const CARDS_KEY = 'learn:mandarin:cards'
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10)
+// ── Field detection helpers ──────────────────────────────────────
+
+function isHanzi(text) {
+  return /[一-鿿㐀-䶿]/.test(text)
 }
 
-// ── SM-2 algorithm ───────────────────────────────────────────────
-// quality: 1 = again, 3 = hard, 4 = good, 5 = easy
-export function sm2Review(card, quality) {
-  let { interval = 1, repetitions = 0, easeFactor = 2.5 } = card
-
-  if (quality < 3) {
-    repetitions = 0
-    interval = 1
-  } else {
-    repetitions += 1
-    if (repetitions === 1) interval = 1
-    else if (repetitions === 2) interval = 6
-    else interval = Math.round(interval * easeFactor)
-  }
-
-  easeFactor = Math.max(
-    1.3,
-    easeFactor + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)
-  )
-
-  const due = new Date()
-  due.setDate(due.getDate() + interval)
-
-  return {
-    ...card,
-    interval,
-    repetitions,
-    easeFactor,
-    dueDate: due.toISOString().slice(0, 10),
-    lastReviewed: todayStr(),
-  }
+function looksLikePinyin(text) {
+  if (!text || text.length > 60) return false
+  // Has tone marks = almost certainly pinyin
+  return /[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)
 }
 
-// ── Card parsing from Anki SQL results ──────────────────────────
-function stripHtml(html) {
+function extractAudioFilename(text) {
+  const m = (text ?? '').match(/\[sound:([^\]]+)\]/)
+  return m ? m[1] : null
+}
+
+function stripTags(html) {
   return (html ?? '')
-    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, ' ')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/\[sound:[^\]]+\]/g, '')
     .trim()
 }
 
-export function parseAnkiCards(db) {
-  const cards = []
+function getModelFieldNames(db) {
+  try {
+    const res = db.exec('SELECT models FROM col LIMIT 1')
+    if (!res.length) return null
+    const models = JSON.parse(res[0].values[0][0])
+    const first  = models[Object.keys(models)[0]]
+    return first?.flds?.map(f => f.name.toLowerCase()) ?? null
+  } catch { return null }
+}
 
-  // Get note fields for each card (join cards + notes)
+function findIdx(names, patterns) {
+  if (!names) return -1
+  return names.findIndex(n => patterns.some(p => n.includes(p)))
+}
+
+// ── Deck parser ──────────────────────────────────────────────────
+
+export function parseAnkiCards(db) {
+  const fieldNames = getModelFieldNames(db)
+
+  // Detect field positions by name, then fall back to content heuristics
+  const pinyinPatterns  = ['pinyin', 'reading', 'romanization', 'pronunciation']
+  const englishPatterns = ['english', 'definition', 'meaning', 'translation', 'back', 'front']
+  const audioPatterns   = ['audio', 'sound']
+
+  let pinyinIdx  = findIdx(fieldNames, pinyinPatterns)
+  let englishIdx = findIdx(fieldNames, englishPatterns)
+  let audioIdx   = findIdx(fieldNames, audioPatterns)
+
   const result = db.exec(`
-    SELECT c.id, c.nid, c.reps, c.ivl, c.factor, c.due, c.type,
-           n.flds, n.tags
+    SELECT c.id, c.nid, n.flds, n.tags
     FROM cards c
     JOIN notes n ON c.nid = n.id
-    WHERE c.type != 3
-    ORDER BY c.due ASC
+    GROUP BY c.nid
+    ORDER BY c.id ASC
   `)
+  if (!result.length) return []
 
-  if (!result.length) return cards
+  const cards = []
 
-  const rows = result[0].values
-  const today = todayStr()
+  for (const [id, nid, flds, tags] of result[0].values) {
+    const rawFields = (flds ?? '').split('\x1f')
+    const clean     = rawFields.map(stripTags)
 
-  for (const row of rows) {
-    const [id, nid, reps, ivl, factor, due, type, flds, tags] = row
-    const fields = (flds ?? '').split('\x1f').map(stripHtml)
-    const front = fields[0] ?? ''
-    const back  = fields[1] ?? ''
-    if (!front) continue
+    // If field names didn't identify pinyin/english, use content detection
+    let pinyin     = pinyinIdx >= 0 ? clean[pinyinIdx] : null
+    let definition = englishIdx >= 0 ? clean[englishIdx] : null
+    let audioFile  = audioIdx >= 0 ? extractAudioFilename(rawFields[audioIdx]) : null
 
-    // Convert Anki due/ivl to our format
-    // ivl > 0 = days, ivl < 0 = seconds (learning steps)
-    const interval = Math.max(1, ivl > 0 ? ivl : 1)
-    const easeFactor = factor ? factor / 1000 : 2.5
+    // Content-based fallback
+    if (!audioFile) {
+      audioFile = rawFields.map(extractAudioFilename).find(Boolean) ?? null
+    }
+    if (!pinyin) {
+      pinyin = clean.find(f => looksLikePinyin(f) && !isHanzi(f)) ?? null
+    }
+    if (!definition) {
+      // First field that isn't hanzi-only and isn't the pinyin we already found
+      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? clean[0] ?? ''
+    }
 
-    // Estimate dueDate: for new/learning cards, due today
-    // For review cards: Anki stores due as day offset from collection creation
-    // We just schedule them all from today for a fresh start
-    const dueDate = reps === 0 ? today : today
+    if (!definition && !pinyin) continue
 
     cards.push({
-      id: String(id),
-      noteId: String(nid),
-      front,
-      back,
-      tags: (tags ?? '').trim().split(/\s+/).filter(Boolean),
-      interval,
-      repetitions: reps ?? 0,
-      easeFactor,
-      dueDate,
-      lastReviewed: null,
-      mastered: false,
+      id:             String(id),
+      noteId:         String(nid),
+      pinyin:         pinyin ?? '',
+      definition:     definition ?? '',
+      audioFile:      audioFile,
+      tags:           (tags ?? '').trim().split(/\s+/).filter(Boolean),
+      mastered:       false,
       culturalContext: null,
     })
   }
@@ -106,9 +110,21 @@ export function parseAnkiCards(db) {
   return cards
 }
 
+// ── Shuffle helper ───────────────────────────────────────────────
+
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 // ── Hook ─────────────────────────────────────────────────────────
+
 export function useFlashcards() {
-  const [cards, setCards] = useState(() => storage.cacheRead(CARDS_KEY, []))
+  const [cards, setCards]   = useState(() => storage.cacheRead(CARDS_KEY, []))
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -118,53 +134,50 @@ export function useFlashcards() {
     })
   }, [])
 
-  const saveCards = useCallback((next) => {
-    setCards(next)
-    storage.setItem(CARDS_KEY, next)
-  }, [])
-
-  // Cards due today or overdue
-  const dueToday = cards.filter(c => !c.mastered && c.dueDate <= todayStr())
-
-  // After reviewing a card, update it in the array
-  const reviewCard = useCallback((cardId, quality) => {
+  // Mark a card as mastered (reviewed at least once)
+  const markReviewed = useCallback((cardId) => {
     setCards(prev => {
-      const next = prev.map(c => {
-        if (c.id !== cardId) return c
-        const updated = sm2Review(c, quality)
-        // Mark mastered once card has had 3+ successful reviews
-        const mastered = updated.repetitions >= 3
-        return { ...updated, mastered }
-      })
+      const next = prev.map(c => c.id === cardId ? { ...c, mastered: true } : c)
       storage.setItem(CARDS_KEY, next)
       return next
     })
   }, [])
 
-  // Import a batch of parsed cards (merge with existing by id)
+  // Cache cultural context on a card after it's generated
+  const saveCulturalContext = useCallback((cardId, context) => {
+    setCards(prev => {
+      const next = prev.map(c => c.id === cardId ? { ...c, culturalContext: context } : c)
+      storage.setItem(CARDS_KEY, next)
+      return next
+    })
+  }, [])
+
+  // Import new cards from parsed deck (skip duplicates by id)
   const importCards = useCallback((parsed) => {
     setCards(prev => {
-      const existingIds = new Set(prev.map(c => c.id))
-      const newCards = parsed.filter(c => !existingIds.has(c.id))
-      const next = [...prev, ...newCards]
+      const existing = new Set(prev.map(c => c.id))
+      const fresh    = parsed.filter(c => !existing.has(c.id))
+      const next     = [...prev, ...fresh]
       storage.setItem(CARDS_KEY, next)
       return next
     })
     return parsed.length
   }, [])
 
-  const totalCards   = cards.length
+  // Return a shuffled copy of all cards for a session
+  const getSessionCards = useCallback(() => shuffle(cards), [cards])
+
+  const totalCards    = cards.length
   const masteredCount = cards.filter(c => c.mastered).length
-  const dueCount     = dueToday.length
 
   return {
     cards,
-    dueToday,
     totalCards,
     masteredCount,
-    dueCount,
     loaded,
-    reviewCard,
+    markReviewed,
+    saveCulturalContext,
     importCards,
+    getSessionCards,
   }
 }

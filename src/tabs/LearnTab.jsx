@@ -7,26 +7,27 @@ import { useFlashcards } from '../hooks/useFlashcards'
 
 export default function LearnTab() {
   const {
-    dueToday, totalCards, masteredCount, dueCount,
-    loaded, reviewCard, importCards,
+    totalCards, masteredCount,
+    loaded, markReviewed, saveCulturalContext,
+    importCards, getSessionCards,
   } = useFlashcards()
 
-  const [view, setView] = useState('home') // 'home' | 'session'
+  const [view, setView]           = useState('home') // 'home' | 'session'
+  const [sessionCards, setSession] = useState([])
 
-  function handleSessionComplete() {
-    setView('home')
+  function startSession() {
+    setSession(getSessionCards())
+    setView('session')
   }
 
-  // ── Flashcard review session ─────────────────────────────────
+  // ── Review session ───────────────────────────────────────────
   if (view === 'session') {
     return (
       <div className="fade-up">
         <header style={{
           padding: '1.25rem 1.1rem 0.75rem',
           borderBottom: '1px solid rgba(232,160,160,0.12)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
         }}>
           <button
             onClick={() => setView('home')}
@@ -35,13 +36,14 @@ export default function LearnTab() {
             ← Back
           </button>
           <span className="serif" style={{ fontSize: '1rem', color: 'var(--text-dark)', fontWeight: 600 }}>
-            Today's review
+            Review session
           </span>
         </header>
         <FlashcardSession
-          dueCards={dueToday}
-          onRate={reviewCard}
-          onComplete={handleSessionComplete}
+          sessionCards={sessionCards}
+          onNext={markReviewed}
+          onSaveCulturalContext={saveCulturalContext}
+          onComplete={() => setView('home')}
         />
       </div>
     )
@@ -51,18 +53,14 @@ export default function LearnTab() {
   return (
     <div className="fade-up">
 
-      {/* Header */}
       <header style={{
         padding: '1.5rem 1.25rem 1.1rem',
         background: 'linear-gradient(160deg, #f9d8d8 0%, #fce8e8 40%, var(--base) 100%)',
         borderBottom: '1px solid rgba(232,160,160,0.15)',
-        overflow: 'hidden',
-        position: 'relative',
+        position: 'relative', overflow: 'hidden',
       }}>
         <span style={{ position:'absolute', top:'0.6rem', right:'1.2rem', fontSize:'0.7rem', color:'var(--rose)', opacity:0.3, animation:'starShimmer 5s infinite' }}>✦</span>
-        <p style={{ fontSize:'0.72rem', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--steel)', margin:'0 0 0.3rem' }}>
-          Learn
-        </p>
+        <p style={{ fontSize:'0.72rem', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--steel)', margin:'0 0 0.3rem' }}>Learn</p>
         <h1 className="serif" style={{ fontSize:'1.6rem', fontWeight:500, color:'var(--text-dark)', margin:'0 0 0.2rem', lineHeight:1.2 }}>
           Mandarin <span style={{ fontSize:'0.9rem' }}>✦</span>
         </h1>
@@ -73,15 +71,14 @@ export default function LearnTab() {
 
       <div style={{ padding: '1.25rem 1.1rem' }}>
 
-        {/* Cultural context tool */}
         <CulturalContextTool />
 
         <div style={{ margin: '1rem 0' }}>
           <OrnateDivider />
         </div>
 
-        {/* Flashcard section */}
-        <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Flashcard section header */}
+        <div style={{ marginBottom: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p style={{ margin:0, fontSize:'0.72rem', fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', color:'var(--steel)' }}>
             Flashcards
           </p>
@@ -93,7 +90,6 @@ export default function LearnTab() {
             <p style={{ color: 'var(--steel)', fontSize: '0.82rem' }}>Loading…</p>
           </div>
         ) : totalCards === 0 ? (
-          /* No cards yet */
           <div style={{
             background: 'white',
             borderRadius: '1.25rem',
@@ -109,22 +105,17 @@ export default function LearnTab() {
             </p>
           </div>
         ) : (
-          /* Deck stats + review button */
           <div>
-            {/* Stats row */}
+            {/* Stats */}
             <div style={{ display:'flex', gap:'0.6rem', marginBottom:'1rem' }}>
               {[
-                { label: 'Total', value: totalCards },
-                { label: 'Mastered', value: masteredCount },
-                { label: 'Due today', value: dueCount },
+                { label: 'Total cards', value: totalCards },
+                { label: 'Reviewed',    value: masteredCount },
               ].map(({ label, value }) => (
                 <div key={label} style={{
-                  flex: 1,
-                  background: 'white',
+                  flex: 1, background: 'white',
                   border: '1px solid rgba(232,160,160,0.18)',
-                  borderRadius: '0.85rem',
-                  padding: '0.7rem 0.5rem',
-                  textAlign: 'center',
+                  borderRadius: '0.85rem', padding: '0.7rem 0.5rem', textAlign: 'center',
                 }}>
                   <p style={{ margin:'0 0 0.2rem', fontSize:'1.2rem', fontWeight:700, color:'var(--text-dark)', fontFamily:'Lora, Georgia, serif' }}>
                     {value}
@@ -136,46 +127,25 @@ export default function LearnTab() {
               ))}
             </div>
 
-            {/* Review button */}
-            {dueCount > 0 ? (
-              <button
-                onClick={() => setView('session')}
-                style={{
-                  width: '100%',
-                  padding: '0.9rem',
-                  background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
-                  border: 'none',
-                  borderRadius: '1rem',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  color: 'white',
-                  cursor: 'pointer',
-                  letterSpacing: '0.03em',
-                  boxShadow: '0 3px 12px rgba(232,160,160,0.3)',
-                }}
-              >
-                Start review · {dueCount} {dueCount === 1 ? 'card' : 'cards'}
-              </button>
-            ) : (
-              <div style={{
-                padding: '1rem',
-                background: 'linear-gradient(135deg, #f5fdf8 0%, #fdf5f5 100%)',
-                borderRadius: '1rem',
-                border: '1px solid rgba(155,187,168,0.25)',
-                textAlign: 'center',
-              }}>
-                <p className="serif" style={{ margin:'0 0 0.25rem', fontSize:'0.95rem', fontStyle:'italic', color:'var(--text-mid)' }}>
-                  All caught up for today ✦
-                </p>
-                <p style={{ margin:0, fontSize:'0.75rem', color:'var(--steel)' }}>
-                  Come back tomorrow for the next review
-                </p>
-              </div>
-            )}
+            {/* Start review */}
+            <button
+              onClick={startSession}
+              style={{
+                width: '100%',
+                padding: '0.9rem',
+                background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
+                border: 'none', borderRadius: '1rem',
+                fontSize: '0.9rem', fontWeight: 600,
+                color: 'white', cursor: 'pointer',
+                letterSpacing: '0.03em',
+                boxShadow: '0 3px 12px rgba(232,160,160,0.3)',
+              }}
+            >
+              Start review · {totalCards} {totalCards === 1 ? 'card' : 'cards'}
+            </button>
           </div>
         )}
 
-        {/* Footer */}
         <div style={{ textAlign:'center', marginTop:'1.5rem', marginBottom:'0.5rem' }}>
           <MicroMotifs count={5} />
         </div>

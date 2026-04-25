@@ -2,21 +2,19 @@ import { useState } from 'react'
 import FlashCard from './FlashCard'
 import { MicroMotifs } from '../Decorations'
 
-export default function FlashcardSession({ dueCards, onRate, onComplete }) {
+export default function FlashcardSession({ sessionCards, onNext, onSaveCulturalContext, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [reviewed, setReviewed] = useState(0)
 
-  const total = dueCards.length
-  const card  = dueCards[currentIndex]
+  const total = sessionCards.length
+  const card  = sessionCards[currentIndex]
   const done  = currentIndex >= total
 
-  function handleRate(cardId, quality) {
-    onRate(cardId, quality)
-    setReviewed(r => r + 1)
+  function handleNext(cardId) {
+    onNext(cardId)
     setCurrentIndex(i => i + 1)
   }
 
-  // ── Completion screen ──────────────────────────────────────────
+  // ── Completion ───────────────────────────────────────────────
   if (done) {
     return (
       <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
@@ -25,10 +23,10 @@ export default function FlashcardSession({ dueCards, onRate, onComplete }) {
           Session complete
         </h2>
         <p style={{ color: 'var(--steel)', fontSize: '0.88rem', margin: '0 0 0.35rem' }}>
-          {reviewed} {reviewed === 1 ? 'card' : 'cards'} reviewed
+          {total} {total === 1 ? 'card' : 'cards'} reviewed
         </p>
         <p style={{ color: 'var(--steel)', fontSize: '0.78rem', fontStyle: 'italic', margin: '0 0 2rem' }}>
-          That counts. The review is closed.
+          That counts. The loop is closed.
         </p>
         <button
           onClick={onComplete}
@@ -51,26 +49,19 @@ export default function FlashcardSession({ dueCards, onRate, onComplete }) {
 
   const progress = currentIndex / total
 
-  // ── Active session ─────────────────────────────────────────────
+  // ── Session ──────────────────────────────────────────────────
   return (
     <div style={{ padding: '1rem 1.1rem' }}>
 
-      {/* Progress bar */}
+      {/* Progress */}
       <div style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
           <span style={{ fontSize: '0.72rem', color: 'var(--steel)' }}>
             {currentIndex + 1} of {total}
           </span>
-          <span style={{ fontSize: '0.72rem', color: 'var(--steel)' }}>
-            <MicroMotifs count={3} />
-          </span>
+          <MicroMotifs count={3} />
         </div>
-        <div style={{
-          height: '3px',
-          background: 'var(--pink)',
-          borderRadius: '2px',
-          overflow: 'hidden',
-        }}>
+        <div style={{ height: '3px', background: 'var(--pink)', borderRadius: '2px', overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${progress * 100}%`,
@@ -82,19 +73,20 @@ export default function FlashcardSession({ dueCards, onRate, onComplete }) {
       </div>
 
       {/* Card */}
-      <FlashCard card={card} onRate={handleRate} />
+      <FlashCard
+        card={card}
+        onNext={handleNext}
+        onSaveCulturalContext={onSaveCulturalContext}
+      />
 
       {/* Quit */}
       <div style={{ textAlign: 'center', marginTop: '1rem' }}>
         <button
           onClick={onComplete}
           style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '0.75rem',
-            color: 'var(--steel)',
-            cursor: 'pointer',
-            textDecoration: 'underline',
+            background: 'none', border: 'none',
+            fontSize: '0.75rem', color: 'var(--steel)',
+            cursor: 'pointer', textDecoration: 'underline',
           }}
         >
           End session early

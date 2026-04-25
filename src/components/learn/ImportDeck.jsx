@@ -1,24 +1,45 @@
 import { useState, useRef } from 'react'
+import { storeAudio } from '../../services/audioStorage'
 
 async function parseDeck(file) {
-  // Dynamically import to avoid loading WASM until needed
-  const JSZip = (await import('jszip')).default
-  const initSqlJs = (await import('sql.js')).default
+  const JSZip      = (await import('jszip')).default
+  const initSqlJs  = (await import('sql.js')).default
+  const { parseAnkiCards } = await import('../../hooks/useFlashcards')
 
   const SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' })
-
-  // Unzip the .apkg file
   const zip = await JSZip.loadAsync(file)
-  const dbFile = zip.file('collection.anki2') ?? zip.file('collection.anki21')
-  if (!dbFile) throw new Error('No collection.anki2 found in this file.')
 
-  const dbBuffer = await dbFile.async('arraybuffer')
+  // Load the SQLite database
+  const dbEntry = zip.file('collection.anki2') ?? zip.file('collection.anki21')
+  if (!dbEntry) throw new Error('No collection.anki2 found in this file.')
+  const dbBuffer = await dbEntry.async('arraybuffer')
   const db = new SQL.Database(new Uint8Array(dbBuffer))
 
-  // Import parseAnkiCards here to avoid circular dependency
-  const { parseAnkiCards } = await import('../../hooks/useFlashcards')
+  // Parse cards
   const cards = parseAnkiCards(db)
   db.close()
+
+  // Build reverse map: original filename → zip entry number
+  const mediaEntry = zip.file('media')
+  if (mediaEntry && cards.some(c => c.audioFile)) {
+    const mediaJson  = await mediaEntry.async('text')
+    const mediaMap   = JSON.parse(mediaJson) // { "0": "audio.mp3", "1": "word.mp3" }
+    const reverseMap = Object.fromEntries(
+      Object.entries(mediaMap).map(([num, name]) => [name, num])
+    )
+
+    // Collect unique audio files needed
+    const needed = [...new Set(cards.map(c => c.audioFile).filter(Boolean))]
+    await Promise.all(
+      needed.map(async (filename) => {
+        const zipNum   = reverseMap[filename]
+        const zipEntry = zipNum != null ? zip.file(zipNum) : null
+        if (!zipEntry) return
+        const buf = await zipEntry.async('arraybuffer')
+        await storeAudio(filename, buf)
+      })
+    )
+  }
 
   return cards
 }
@@ -31,6 +52,7 @@ export default function ImportDeck({ onImport }) {
   async function handleFile(e) {
     const file = e.target.files?.[0]
     if (!file) return
+
     if (!file.name.endsWith('.apkg')) {
       setStatus('error')
       setMessage('Please select an .apkg file exported from Anki.')
@@ -47,7 +69,7 @@ export default function ImportDeck({ onImport }) {
         setMessage('No cards found in this deck.')
         return
       }
-      const count = onImport(cards)
+      onImport(cards)
       setStatus('done')
       setMessage(`${cards.length} cards imported.`)
     } catch (err) {
@@ -55,7 +77,6 @@ export default function ImportDeck({ onImport }) {
       setMessage(`Import failed: ${err.message}`)
     }
 
-    // Reset input so the same file can be re-selected
     if (inputRef.current) inputRef.current.value = ''
   }
 

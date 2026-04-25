@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Volume2 } from 'lucide-react'
 import { MicroMotifs } from '../Decorations'
+import { playAudio } from '../../services/audioStorage'
 
 async function fetchCulturalContext(word, definition) {
   const res = await fetch('/api/cultural-context', {
@@ -7,58 +9,69 @@ async function fetchCulturalContext(word, definition) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ word, definition }),
   })
-  if (!res.ok) throw new Error('Failed to fetch context')
-  const data = await res.json()
-  return data.context
+  if (!res.ok) throw new Error('failed')
+  return (await res.json()).context
 }
 
-export default function FlashCard({ card, onRate }) {
-  const [flipped, setFlipped] = useState(false)
-  const [context, setContext] = useState(card.culturalContext ?? null)
-  const [contextLoading, setContextLoading] = useState(false)
-  const [rated, setRated] = useState(false)
+export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
+  const [flipped, setFlipped]           = useState(false)
+  const [context, setContext]           = useState(card.culturalContext ?? null)
+  const [contextLoading, setCtxLoading] = useState(false)
+  const [audioPlaying, setAudioPlaying] = useState(false)
+  const [done, setDone]                 = useState(false)
+  const didAutoPlay = useRef(false)
 
-  // Reset state when card changes
+  // Reset on card change
   useEffect(() => {
     setFlipped(false)
-    setRated(false)
+    setDone(false)
     setContext(card.culturalContext ?? null)
+    didAutoPlay.current = false
   }, [card.id])
 
+  async function handleAudio() {
+    if (audioPlaying || !card.audioFile) return
+    setAudioPlaying(true)
+    await playAudio(card.audioFile)
+    setAudioPlaying(false)
+  }
+
   async function handleFlip() {
-    if (rated) return
+    if (done) return
     setFlipped(true)
+
+    // Auto-play audio on flip (user gesture satisfies browser policy)
+    if (card.audioFile && !didAutoPlay.current) {
+      didAutoPlay.current = true
+      handleAudio()
+    }
+
+    // Fetch cultural context if not already cached
     if (!context) {
-      setContextLoading(true)
+      setCtxLoading(true)
       try {
-        const ctx = await fetchCulturalContext(card.front, card.back)
+        const ctx = await fetchCulturalContext(card.pinyin || card.definition, card.definition)
         setContext(ctx)
+        onSaveCulturalContext?.(card.id, ctx)
       } catch {
         setContext('Cultural context unavailable right now.')
       } finally {
-        setContextLoading(false)
+        setCtxLoading(false)
       }
     }
   }
 
-  function handleRate(quality) {
-    if (rated) return
-    setRated(true)
-    setTimeout(() => onRate(card.id, quality), 300)
+  function handleNext() {
+    setDone(true)
+    setTimeout(() => onNext(card.id), 250)
   }
-
-  const RATINGS = [
-    { label: 'Again', quality: 1, color: '#E8A0A0', bg: 'rgba(232,160,160,0.12)' },
-    { label: 'Good',  quality: 4, color: '#8C9BAB', bg: 'rgba(140,155,171,0.10)' },
-    { label: 'Easy',  quality: 5, color: '#9BBBA8', bg: 'rgba(155,187,168,0.12)' },
-  ]
 
   return (
     <div style={{ width: '100%' }}>
 
-      {/* ── Card ── */}
+      {/* ── Flip card ── */}
       <div
-        onClick={!flipped ? handleFlip : undefined}
+        onClick={!flipped && !done ? handleFlip : undefined}
         style={{
           perspective: '1000px',
           cursor: flipped ? 'default' : 'pointer',
@@ -68,53 +81,48 @@ export default function FlashCard({ card, onRate }) {
         <div style={{
           position: 'relative',
           transformStyle: 'preserve-3d',
-          transition: 'transform 0.45s ease',
+          transition: 'transform 0.42s ease',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           minHeight: '260px',
         }}>
 
-          {/* Front */}
+          {/* ── Front: definition ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            position: 'absolute',
-            inset: 0,
+            position: 'absolute', inset: 0,
             background: 'linear-gradient(160deg, #fde8e8 0%, #fdf5f5 100%)',
             borderRadius: '1.25rem',
             border: '1.5px solid rgba(232,160,160,0.25)',
             boxShadow: '0 4px 20px rgba(232,160,160,0.12)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem',
-            gap: '0.75rem',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '2rem', gap: '0.75rem',
           }}>
             <MicroMotifs count={3} />
             <p style={{
               fontFamily: 'Lora, Georgia, serif',
-              fontSize: '2.8rem',
-              fontWeight: 700,
+              fontSize: '1.4rem',
+              fontWeight: 600,
               color: 'var(--text-dark)',
               margin: 0,
-              lineHeight: 1.2,
+              lineHeight: 1.4,
               textAlign: 'center',
             }}>
-              {card.front}
+              {card.definition}
             </p>
-            <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--steel)' }}>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--steel)' }}>
               tap to reveal
             </p>
             <MicroMotifs count={3} />
           </div>
 
-          {/* Back */}
+          {/* ── Back: pinyin + audio + cultural context ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
-            position: 'absolute',
-            inset: 0,
+            position: 'absolute', inset: 0,
             background: 'white',
             borderRadius: '1.25rem',
             border: '1.5px solid rgba(140,155,171,0.2)',
@@ -122,27 +130,47 @@ export default function FlashCard({ card, onRate }) {
             padding: '1.25rem',
             overflowY: 'auto',
           }}>
-            {/* Word */}
-            <p style={{
-              fontFamily: 'Lora, Georgia, serif',
-              fontSize: '1.6rem',
-              fontWeight: 700,
-              color: 'var(--text-dark)',
-              margin: '0 0 0.25rem',
-              textAlign: 'center',
-            }}>
-              {card.front}
-            </p>
 
-            {/* Definition */}
+            {/* Pinyin + audio button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+              <p style={{
+                fontFamily: 'Lora, Georgia, serif',
+                fontSize: '1.7rem',
+                fontWeight: 700,
+                color: 'var(--text-dark)',
+                margin: 0,
+                textAlign: 'center',
+              }}>
+                {card.pinyin || '—'}
+              </p>
+              {card.audioFile && (
+                <button
+                  onClick={e => { e.stopPropagation(); handleAudio() }}
+                  disabled={audioPlaying}
+                  style={{
+                    background: audioPlaying ? 'var(--pink)' : 'rgba(232,160,160,0.15)',
+                    border: '1px solid rgba(232,160,160,0.3)',
+                    borderRadius: '50%',
+                    width: '2rem', height: '2rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: audioPlaying ? 'default' : 'pointer',
+                    flexShrink: 0,
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <Volume2 size={13} strokeWidth={1.75} color="var(--rose)" />
+                </button>
+              )}
+            </div>
+
+            {/* Definition (smaller, for reference) */}
             <p style={{
-              fontSize: '0.9rem',
-              color: 'var(--text-mid)',
+              fontSize: '0.82rem',
+              color: 'var(--steel)',
               margin: '0 0 1rem',
               textAlign: 'center',
-              lineHeight: 1.5,
             }}>
-              {card.back}
+              {card.definition}
             </p>
 
             {/* Divider */}
@@ -153,70 +181,49 @@ export default function FlashCard({ card, onRate }) {
             }} />
 
             {/* Cultural context */}
-            <div>
+            <p style={{
+              fontSize: '0.65rem', fontWeight: 600,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: 'var(--rose)', margin: '0 0 0.5rem',
+            }}>
+              Cultural context
+            </p>
+            {contextLoading ? (
+              <p style={{ fontSize: '0.8rem', color: 'var(--steel)', fontStyle: 'italic' }}>Generating…</p>
+            ) : context ? (
               <p style={{
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: 'var(--rose)',
-                margin: '0 0 0.5rem',
+                fontSize: '0.82rem', color: 'var(--text-mid)',
+                lineHeight: 1.65,
+                fontFamily: 'Lora, Georgia, serif', fontStyle: 'italic',
+                margin: 0, whiteSpace: 'pre-wrap',
               }}>
-                Cultural context
+                {context}
               </p>
-              {contextLoading ? (
-                <p style={{ fontSize: '0.8rem', color: 'var(--steel)', fontStyle: 'italic' }}>
-                  Generating context…
-                </p>
-              ) : context ? (
-                <p style={{
-                  fontSize: '0.82rem',
-                  color: 'var(--text-mid)',
-                  lineHeight: 1.65,
-                  fontFamily: 'Lora, Georgia, serif',
-                  fontStyle: 'italic',
-                  margin: 0,
-                  whiteSpace: 'pre-wrap',
-                }}>
-                  {context}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
           </div>
 
         </div>
       </div>
 
-      {/* ── Rating buttons (only shown when flipped) ── */}
-      {flipped && !rated && (
-        <div style={{ display: 'flex', gap: '0.6rem' }}>
-          {RATINGS.map(({ label, quality, color, bg }) => (
-            <button
-              key={label}
-              onClick={() => handleRate(quality)}
-              style={{
-                flex: 1,
-                padding: '0.7rem 0',
-                background: bg,
-                border: `1.5px solid ${color}`,
-                borderRadius: '0.85rem',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                color,
-                cursor: 'pointer',
-                transition: 'transform 0.1s, opacity 0.1s',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {rated && (
-        <div style={{ textAlign: 'center', padding: '0.5rem' }}>
-          <span style={{ color: 'var(--rose)', letterSpacing: '0.3em' }}>✦</span>
-        </div>
+      {/* ── Next button (only after flip) ── */}
+      {flipped && !done && (
+        <button
+          onClick={handleNext}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
+            border: 'none',
+            borderRadius: '1rem',
+            fontSize: '0.88rem',
+            fontWeight: 600,
+            color: 'white',
+            cursor: 'pointer',
+            letterSpacing: '0.02em',
+          }}
+        >
+          Next →
+        </button>
       )}
     </div>
   )
