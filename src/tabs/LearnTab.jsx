@@ -1,0 +1,186 @@
+import { useState } from 'react'
+import { MicroMotifs, OrnateDivider } from '../components/Decorations'
+import CulturalContextTool from '../components/learn/CulturalContextTool'
+import ImportDeck from '../components/learn/ImportDeck'
+import FlashcardSession from '../components/learn/FlashcardSession'
+import { useFlashcards } from '../hooks/useFlashcards'
+
+export default function LearnTab() {
+  const {
+    dueToday, totalCards, masteredCount, dueCount,
+    loaded, reviewCard, importCards,
+  } = useFlashcards()
+
+  const [view, setView] = useState('home') // 'home' | 'session'
+
+  function handleSessionComplete() {
+    setView('home')
+  }
+
+  // ── Flashcard review session ─────────────────────────────────
+  if (view === 'session') {
+    return (
+      <div className="fade-up">
+        <header style={{
+          padding: '1.25rem 1.1rem 0.75rem',
+          borderBottom: '1px solid rgba(232,160,160,0.12)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+        }}>
+          <button
+            onClick={() => setView('home')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--steel)', fontSize: '0.85rem' }}
+          >
+            ← Back
+          </button>
+          <span className="serif" style={{ fontSize: '1rem', color: 'var(--text-dark)', fontWeight: 600 }}>
+            Today's review
+          </span>
+        </header>
+        <FlashcardSession
+          dueCards={dueToday}
+          onRate={reviewCard}
+          onComplete={handleSessionComplete}
+        />
+      </div>
+    )
+  }
+
+  // ── Home view ────────────────────────────────────────────────
+  return (
+    <div className="fade-up">
+
+      {/* Header */}
+      <header style={{
+        padding: '1.5rem 1.25rem 1.1rem',
+        background: 'linear-gradient(160deg, #f9d8d8 0%, #fce8e8 40%, var(--base) 100%)',
+        borderBottom: '1px solid rgba(232,160,160,0.15)',
+        overflow: 'hidden',
+        position: 'relative',
+      }}>
+        <span style={{ position:'absolute', top:'0.6rem', right:'1.2rem', fontSize:'0.7rem', color:'var(--rose)', opacity:0.3, animation:'starShimmer 5s infinite' }}>✦</span>
+        <p style={{ fontSize:'0.72rem', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--steel)', margin:'0 0 0.3rem' }}>
+          Learn
+        </p>
+        <h1 className="serif" style={{ fontSize:'1.6rem', fontWeight:500, color:'var(--text-dark)', margin:'0 0 0.2rem', lineHeight:1.2 }}>
+          Mandarin <span style={{ fontSize:'0.9rem' }}>✦</span>
+        </h1>
+        <p className="serif" style={{ fontSize:'0.85rem', fontStyle:'italic', color:'var(--text-mid)', margin:0 }}>
+          Each session adds a small layer.
+        </p>
+      </header>
+
+      <div style={{ padding: '1.25rem 1.1rem' }}>
+
+        {/* Cultural context tool */}
+        <CulturalContextTool />
+
+        <div style={{ margin: '1rem 0' }}>
+          <OrnateDivider />
+        </div>
+
+        {/* Flashcard section */}
+        <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ margin:0, fontSize:'0.72rem', fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', color:'var(--steel)' }}>
+            Flashcards
+          </p>
+          <ImportDeck onImport={importCards} />
+        </div>
+
+        {!loaded ? (
+          <div style={{ padding: '1.5rem', textAlign: 'center' }}>
+            <p style={{ color: 'var(--steel)', fontSize: '0.82rem' }}>Loading…</p>
+          </div>
+        ) : totalCards === 0 ? (
+          /* No cards yet */
+          <div style={{
+            background: 'white',
+            borderRadius: '1.25rem',
+            border: '1.5px dashed rgba(232,160,160,0.3)',
+            padding: '2rem 1.5rem',
+            textAlign: 'center',
+          }}>
+            <p className="serif" style={{ fontSize:'1.1rem', color:'var(--text-mid)', fontStyle:'italic', margin:'0 0 0.5rem' }}>
+              No deck imported yet
+            </p>
+            <p style={{ fontSize:'0.78rem', color:'var(--steel)', margin:0 }}>
+              Export a deck from Anki as .apkg and import it above
+            </p>
+          </div>
+        ) : (
+          /* Deck stats + review button */
+          <div>
+            {/* Stats row */}
+            <div style={{ display:'flex', gap:'0.6rem', marginBottom:'1rem' }}>
+              {[
+                { label: 'Total', value: totalCards },
+                { label: 'Mastered', value: masteredCount },
+                { label: 'Due today', value: dueCount },
+              ].map(({ label, value }) => (
+                <div key={label} style={{
+                  flex: 1,
+                  background: 'white',
+                  border: '1px solid rgba(232,160,160,0.18)',
+                  borderRadius: '0.85rem',
+                  padding: '0.7rem 0.5rem',
+                  textAlign: 'center',
+                }}>
+                  <p style={{ margin:'0 0 0.2rem', fontSize:'1.2rem', fontWeight:700, color:'var(--text-dark)', fontFamily:'Lora, Georgia, serif' }}>
+                    {value}
+                  </p>
+                  <p style={{ margin:0, fontSize:'0.65rem', color:'var(--steel)', textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Review button */}
+            {dueCount > 0 ? (
+              <button
+                onClick={() => setView('session')}
+                style={{
+                  width: '100%',
+                  padding: '0.9rem',
+                  background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
+                  border: 'none',
+                  borderRadius: '1rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  color: 'white',
+                  cursor: 'pointer',
+                  letterSpacing: '0.03em',
+                  boxShadow: '0 3px 12px rgba(232,160,160,0.3)',
+                }}
+              >
+                Start review · {dueCount} {dueCount === 1 ? 'card' : 'cards'}
+              </button>
+            ) : (
+              <div style={{
+                padding: '1rem',
+                background: 'linear-gradient(135deg, #f5fdf8 0%, #fdf5f5 100%)',
+                borderRadius: '1rem',
+                border: '1px solid rgba(155,187,168,0.25)',
+                textAlign: 'center',
+              }}>
+                <p className="serif" style={{ margin:'0 0 0.25rem', fontSize:'0.95rem', fontStyle:'italic', color:'var(--text-mid)' }}>
+                  All caught up for today ✦
+                </p>
+                <p style={{ margin:0, fontSize:'0.75rem', color:'var(--steel)' }}>
+                  Come back tomorrow for the next review
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign:'center', marginTop:'1.5rem', marginBottom:'0.5rem' }}>
+          <MicroMotifs count={5} />
+        </div>
+
+      </div>
+    </div>
+  )
+}

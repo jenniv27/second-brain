@@ -214,13 +214,22 @@ export function useSocial() {
 }
 
 // ── Mandarin Words ────────────────────────────────────────────────
+// Reads from flashcard deck (learn:mandarin:cards) if available,
+// falls back to legacy learn:mandarin:words key
 export function useMandarinCount() {
+  const [cards, setCards] = useState(() => storage.cacheRead('learn:mandarin:cards', null))
   const [words, setWords] = useState(() => storage.cacheRead('learn:mandarin:words', []))
 
   useEffect(() => {
+    storage.getItem('learn:mandarin:cards', null).then(setCards)
     storage.getItem('learn:mandarin:words', []).then(setWords)
   }, [])
 
-  const mastered = words.filter(w => w.mastered).length
-  return { mastered, total: words.length }
+  if (cards !== null) {
+    return {
+      mastered: cards.filter(c => c.mastered).length,
+      total: cards.length,
+    }
+  }
+  return { mastered: words.filter(w => w.mastered).length, total: words.length }
 }
