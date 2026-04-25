@@ -5,6 +5,7 @@ import BodyTab from './tabs/BodyTab'
 import MindTab from './tabs/MindTab'
 import PlaceholderTab from './tabs/PlaceholderTab'
 import MoneyTab from './tabs/MoneyTab'
+import WorldTab from './tabs/WorldTab'
 
 const TABS = [
   { id: 'home',   label: 'Home',   icon: '🏠' },
@@ -27,7 +28,7 @@ function App() {
         {activeTab === 'mind'  && <MindTab />}
         {activeTab === 'money' && <MoneyTab />}
         {activeTab === 'learn' && <PlaceholderTab name="Learn" icon="🌙" />}
-        {activeTab === 'world' && <PlaceholderTab name="World" icon="🌍" />}
+        {activeTab === 'world' && <WorldTab />}
         {activeTab === 'read'  && <PlaceholderTab name="Read" icon="📖" />}
       </div>
       <TabBar tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
