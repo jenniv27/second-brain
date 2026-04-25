@@ -21,7 +21,7 @@ function MilestoneCard({ milestone }) {
 }
 
 export default function WeightModule() {
-  const { startWeight, lostLbs, achievedMilestones, nextMilestone, hasSetup, setStartWeight, logWeight } = useWeight()
+  const { startWeight, latestWeight, lostLbs, achievedMilestones, nextMilestone, hasSetup, setStartWeight, logWeight } = useWeight()
   const [mode, setMode]   = useState(null) // 'setup' | 'log' | null
   const [input, setInput] = useState('')
 
@@ -60,6 +60,13 @@ export default function WeightModule() {
           ) : (
             <p style={{ fontSize: '0.73rem', fontStyle: 'italic', fontFamily: 'Lora, Georgia, serif', color: 'var(--steel)', margin: '0 0 0.75rem', opacity: 0.75 }}>
               Milestone cards appear here as you reach them.
+            </p>
+          )}
+
+          {/* Last logged weight */}
+          {latestWeight !== null && (
+            <p style={{ fontSize: '0.73rem', color: 'var(--steel)', margin: '0 0 0.35rem' }}>
+              Last logged: <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{latestWeight} lbs</span>
             </p>
           )}
 

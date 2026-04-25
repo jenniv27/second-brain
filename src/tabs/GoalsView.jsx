@@ -4,7 +4,6 @@ import NetWorthModule   from '../components/goals/NetWorthModule'
 import StepsModule      from '../components/goals/StepsModule'
 import WeightModule     from '../components/goals/WeightModule'
 import CookingModule    from '../components/goals/CookingModule'
-import SocialModule     from '../components/goals/SocialModule'
 import MandarinModule   from '../components/goals/MandarinModule'
 import { OrnateDivider, MicroMotifs, Wings, Bow } from '../components/Decorations'
 
@@ -103,10 +102,6 @@ export default function GoalsView({ onBack }) {
         <div style={{ margin: '0.2rem 0' }}>
           <OrnateDivider />
         </div>
-
-        <Section>
-          <SocialModule />
-        </Section>
 
         <Section>
           <MandarinModule />
