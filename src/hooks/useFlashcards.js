@@ -112,9 +112,9 @@ export function parseAnkiCards(db) {
     // expected role. If a "hanzi" field contains English (or vice-versa), the
     // assignment is discarded so the content-based fallback can correct it.
     if (audioIdx >= 0)  audioFile  = extractAudioFilename(rawFields[audioIdx])
-    if (hanziIdx >= 0   && isHanzi(clean[hanziIdx]))                  hanzi      = clean[hanziIdx]
-    if (pinyinIdx >= 0  && looksLikePinyin(clean[pinyinIdx]))         pinyin     = clean[pinyinIdx]
-    if (englishIdx >= 0 && !isPrimarilyHanzi(clean[englishIdx]))      definition = clean[englishIdx]
+    if (hanziIdx >= 0   && isHanzi(clean[hanziIdx]))                          hanzi      = clean[hanziIdx]
+    if (pinyinIdx >= 0  && clean[pinyinIdx] && !isPrimarilyHanzi(clean[pinyinIdx])) pinyin = clean[pinyinIdx]
+    if (englishIdx >= 0 && clean[englishIdx] && !isPrimarilyHanzi(clean[englishIdx])) definition = clean[englishIdx]
 
     // Content-based fallbacks for anything not confirmed above
     if (!audioFile)   audioFile  = rawFields.map(extractAudioFilename).find(Boolean) ?? null
@@ -136,12 +136,6 @@ export function parseAnkiCards(db) {
       culturalContext: null,
     })
   }
-
-  console.debug('[parseAnkiCards] fieldNames:', fieldNames)
-  console.debug('[parseAnkiCards] indices → pinyin:%d english:%d hanzi:%d audio:%d', pinyinIdx, englishIdx, hanziIdx, audioIdx)
-  console.debug('[parseAnkiCards] first 5 cards:', cards.slice(0, 5).map(c => ({
-    definition: c.definition, pinyin: c.pinyin, hanzi: c.hanzi, audio: c.audioFile,
-  })))
 
   return cards
 }
