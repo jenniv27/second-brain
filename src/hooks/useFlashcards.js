@@ -175,36 +175,48 @@ export function useFlashcards() {
     })
   }, [])
 
-  // Import new cards from parsed deck (skip duplicates by id, definition, or pinyin)
+  // Import cards from a parsed deck.
+  // Cards whose Anki ID already exists are re-parsed (fields updated) while
+  // preserving mastered state and cached cultural context. Brand-new IDs are
+  // added, unless a card with the same definition or pinyin already exists in
+  // a different deck entry (cross-deck dedup).
   const importCards = useCallback((parsed) => {
     setCards(prev => {
-      const existingIds        = new Set(prev.map(c => c.id))
-      const existingDefs       = new Set(prev.map(c => c.definition?.toLowerCase().trim()).filter(Boolean))
-      const existingPinyins    = new Set(prev.map(c => c.pinyin?.toLowerCase().trim()).filter(Boolean))
+      const prevById    = new Map(prev.map(c => [c.id, c]))
+      const prevDefs    = new Set(prev.map(c => c.definition?.toLowerCase().trim()).filter(Boolean))
+      const prevPinyins = new Set(prev.map(c => c.pinyin?.toLowerCase().trim()).filter(Boolean))
 
-      // Also deduplicate within the incoming batch itself
       const seenIds     = new Set()
       const seenDefs    = new Set()
       const seenPinyins = new Set()
 
-      const fresh = parsed.filter(c => {
+      const toUpdate = [] // same Anki ID — refresh parser fields, keep progress
+      const toAdd    = [] // brand-new cards
+
+      for (const c of parsed) {
         const def    = c.definition?.toLowerCase().trim()
         const pinyin = c.pinyin?.toLowerCase().trim()
 
-        if (existingIds.has(c.id))            return false
-        if (def    && existingDefs.has(def))   return false
-        if (pinyin && existingPinyins.has(pinyin)) return false
-        if (seenIds.has(c.id))                return false
-        if (def    && seenDefs.has(def))       return false
-        if (pinyin && seenPinyins.has(pinyin)) return false
-
+        if (seenIds.has(c.id)) continue
         seenIds.add(c.id)
         if (def)    seenDefs.add(def)
         if (pinyin) seenPinyins.add(pinyin)
-        return true
-      })
 
-      const next = [...prev, ...fresh]
+        if (prevById.has(c.id)) {
+          const existing = prevById.get(c.id)
+          toUpdate.push({ ...c, mastered: existing.mastered, culturalContext: existing.culturalContext })
+        } else {
+          if (def    && prevDefs.has(def))    continue
+          if (pinyin && prevPinyins.has(pinyin)) continue
+          toAdd.push(c)
+        }
+      }
+
+      const updatesById = new Map(toUpdate.map(c => [c.id, c]))
+      const next = [
+        ...prev.map(c => updatesById.has(c.id) ? updatesById.get(c.id) : c),
+        ...toAdd,
+      ]
       storage.setItem(CARDS_KEY, next)
       return next
     })
