@@ -9,8 +9,8 @@ export default function FlashcardSession({ sessionCards, onNext, onSaveCulturalC
   const card  = sessionCards[currentIndex]
   const done  = currentIndex >= total
 
-  function handleNext(cardId) {
-    onNext(cardId)
+  function handleNext(cardId, rating) {
+    onNext(cardId, rating)
     setCurrentIndex(i => i + 1)
   }
 

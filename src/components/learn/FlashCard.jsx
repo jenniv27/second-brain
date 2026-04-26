@@ -62,9 +62,9 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
     }
   }
 
-  function handleNext() {
+  function rate(rating) {
     setDone(true)
-    setTimeout(() => onNext(card.id), 250)
+    setTimeout(() => onNext(card.id, rating), 250)
   }
 
   return (
@@ -221,25 +221,32 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
         </div>
       </div>
 
-      {/* ── Next button (only after flip) ── */}
+      {/* ── Rating buttons (only after flip) ── */}
       {flipped && !done && (
-        <button
-          onClick={handleNext}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
-            border: 'none',
-            borderRadius: '1rem',
-            fontSize: '0.88rem',
-            fontWeight: 600,
-            color: 'white',
-            cursor: 'pointer',
-            letterSpacing: '0.02em',
-          }}
-        >
-          Next →
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {[
+            { rating: 0, label: 'Again', style: { background: 'rgba(192,99,90,0.08)', border: '1px solid rgba(192,99,90,0.25)', color: '#c0635a' } },
+            { rating: 4, label: 'Good',  style: { background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)', border: 'none', color: 'white' } },
+            { rating: 5, label: 'Easy',  style: { background: 'rgba(90,154,90,0.08)', border: '1px solid rgba(90,154,90,0.25)', color: '#4a8a4a' } },
+          ].map(({ rating, label, style }) => (
+            <button
+              key={rating}
+              onClick={() => rate(rating)}
+              style={{
+                flex: 1,
+                padding: '0.75rem 0.5rem',
+                borderRadius: '1rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                letterSpacing: '0.02em',
+                ...style,
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )

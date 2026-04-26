@@ -140,6 +140,36 @@ export function parseAnkiCards(db) {
   return cards
 }
 
+// ── SM-2 spaced repetition ───────────────────────────────────────
+// rating: 0 = Again, 4 = Good, 5 = Easy
+
+function sm2(card, rating) {
+  let interval    = card.interval    ?? 0
+  let easeFactor  = card.easeFactor  ?? 2.5
+  let repetitions = card.repetitions ?? 0
+
+  if (rating === 0) {
+    interval    = 1
+    repetitions = 0
+    easeFactor  = Math.max(1.3, easeFactor - 0.2)
+  } else {
+    repetitions += 1
+    if      (repetitions === 1) interval = 1
+    else if (repetitions === 2) interval = 6
+    else                        interval = Math.round(interval * easeFactor)
+
+    easeFactor = Math.max(1.3, easeFactor + 0.1 - (5 - rating) * (0.08 + (5 - rating) * 0.02))
+  }
+
+  const due = new Date()
+  due.setDate(due.getDate() + interval)
+  return { interval, easeFactor, repetitions, dueDate: due.toISOString().split('T')[0] }
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0]
+}
+
 // ── Shuffle helper ───────────────────────────────────────────────
 
 function shuffle(arr) {
@@ -164,10 +194,13 @@ export function useFlashcards() {
     })
   }, [])
 
-  // Mark a card as mastered (reviewed at least once)
-  const markReviewed = useCallback((cardId) => {
+  // Rate a card after review — updates SM-2 scheduling fields
+  const rateCard = useCallback((cardId, rating) => {
     setCards(prev => {
-      const next = prev.map(c => c.id === cardId ? { ...c, mastered: true } : c)
+      const next = prev.map(c => {
+        if (c.id !== cardId) return c
+        return { ...c, ...sm2(c, rating), mastered: true }
+      })
       storage.setItem(CARDS_KEY, next)
       return next
     })
@@ -211,7 +244,15 @@ export function useFlashcards() {
 
         if (prevById.has(c.id)) {
           const existing = prevById.get(c.id)
-          toUpdate.push({ ...c, mastered: existing.mastered, culturalContext: existing.culturalContext })
+          toUpdate.push({
+            ...c,
+            mastered:       existing.mastered,
+            culturalContext: existing.culturalContext,
+            interval:       existing.interval,
+            easeFactor:     existing.easeFactor,
+            repetitions:    existing.repetitions,
+            dueDate:        existing.dueDate,
+          })
         } else {
           if (def    && prevDefs.has(def))    continue
           if (pinyin && prevPinyins.has(pinyin)) continue
@@ -230,8 +271,11 @@ export function useFlashcards() {
     return parsed.length
   }, [])
 
-  // Return a shuffled copy of all cards for a session
-  const getSessionCards = useCallback(() => shuffle(cards), [cards])
+  // Return shuffled cards that are due today (dueDate unset = new card = due now)
+  const getSessionCards = useCallback(() => {
+    const t = today()
+    return shuffle(cards.filter(c => !c.dueDate || c.dueDate <= t))
+  }, [cards])
 
   // Add a single manually-created card
   const addCard = useCallback((card) => {
@@ -242,15 +286,18 @@ export function useFlashcards() {
     })
   }, [])
 
-  const totalCards    = cards.length
-  const masteredCount = cards.filter(c => c.mastered).length
+  const t            = today()
+  const totalCards   = cards.length
+  const dueCount     = cards.filter(c => !c.dueDate || c.dueDate <= t).length
+  const newCount     = cards.filter(c => !c.dueDate).length
 
   return {
     cards,
     totalCards,
-    masteredCount,
+    dueCount,
+    newCount,
     loaded,
-    markReviewed,
+    rateCard,
     saveCulturalContext,
     importCards,
     addCard,

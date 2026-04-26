@@ -8,12 +8,12 @@ import { useFlashcards } from '../hooks/useFlashcards'
 
 export default function LearnTab() {
   const {
-    cards, totalCards, masteredCount,
-    loaded, markReviewed, saveCulturalContext,
+    cards, totalCards, dueCount, newCount,
+    loaded, rateCard, saveCulturalContext,
     importCards, addCard, getSessionCards,
   } = useFlashcards()
 
-  const [view, setView]           = useState('home') // 'home' | 'session'
+  const [view, setView]            = useState('home') // 'home' | 'session'
   const [sessionCards, setSession] = useState([])
 
   function startSession() {
@@ -42,7 +42,7 @@ export default function LearnTab() {
         </header>
         <FlashcardSession
           sessionCards={sessionCards}
-          onNext={markReviewed}
+          onNext={rateCard}
           onSaveCulturalContext={saveCulturalContext}
           onComplete={() => setView('home')}
         />
@@ -51,6 +51,8 @@ export default function LearnTab() {
   }
 
   // ── Home view ────────────────────────────────────────────────
+  const allCaughtUp = loaded && totalCards > 0 && dueCount === 0
+
   return (
     <div className="fade-up">
 
@@ -114,15 +116,16 @@ export default function LearnTab() {
             {/* Stats */}
             <div style={{ display:'flex', gap:'0.6rem', marginBottom:'1rem' }}>
               {[
-                { label: 'Total cards', value: totalCards },
-                { label: 'Reviewed',    value: masteredCount },
-              ].map(({ label, value }) => (
+                { label: 'Total',     value: totalCards },
+                { label: 'Due today', value: dueCount,  accent: dueCount > 0 },
+                { label: 'New',       value: newCount },
+              ].map(({ label, value, accent }) => (
                 <div key={label} style={{
                   flex: 1, background: 'white',
-                  border: '1px solid rgba(232,160,160,0.18)',
+                  border: `1px solid ${accent ? 'rgba(232,160,160,0.4)' : 'rgba(232,160,160,0.18)'}`,
                   borderRadius: '0.85rem', padding: '0.7rem 0.5rem', textAlign: 'center',
                 }}>
-                  <p style={{ margin:'0 0 0.2rem', fontSize:'1.2rem', fontWeight:700, color:'var(--text-dark)', fontFamily:'Lora, Georgia, serif' }}>
+                  <p style={{ margin:'0 0 0.2rem', fontSize:'1.2rem', fontWeight:700, color: accent ? 'var(--rose)' : 'var(--text-dark)', fontFamily:'Lora, Georgia, serif' }}>
                     {value}
                   </p>
                   <p style={{ margin:0, fontSize:'0.65rem', color:'var(--steel)', textTransform:'uppercase', letterSpacing:'0.05em' }}>
@@ -135,23 +138,41 @@ export default function LearnTab() {
             {/* Search & add */}
             <CardSearch cards={cards} onAdd={addCard} />
 
-            {/* Start review */}
-            <button
-              onClick={startSession}
-              style={{
-                width: '100%',
+            {/* Start review / all caught up */}
+            {allCaughtUp ? (
+              <div style={{
                 marginTop: '0.85rem',
                 padding: '0.9rem',
-                background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
-                border: 'none', borderRadius: '1rem',
-                fontSize: '0.9rem', fontWeight: 600,
-                color: 'white', cursor: 'pointer',
-                letterSpacing: '0.03em',
-                boxShadow: '0 3px 12px rgba(232,160,160,0.3)',
-              }}
-            >
-              Start review · {totalCards} {totalCards === 1 ? 'card' : 'cards'}
-            </button>
+                background: 'rgba(232,160,160,0.07)',
+                border: '1px solid rgba(232,160,160,0.2)',
+                borderRadius: '1rem',
+                textAlign: 'center',
+              }}>
+                <p className="serif" style={{ margin:'0 0 0.2rem', fontSize:'0.95rem', color:'var(--text-mid)', fontStyle:'italic' }}>
+                  All caught up for today ✦
+                </p>
+                <p style={{ margin:0, fontSize:'0.72rem', color:'var(--steel)' }}>
+                  Come back tomorrow for your next review
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={startSession}
+                style={{
+                  width: '100%',
+                  marginTop: '0.85rem',
+                  padding: '0.9rem',
+                  background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
+                  border: 'none', borderRadius: '1rem',
+                  fontSize: '0.9rem', fontWeight: 600,
+                  color: 'white', cursor: 'pointer',
+                  letterSpacing: '0.03em',
+                  boxShadow: '0 3px 12px rgba(232,160,160,0.3)',
+                }}
+              >
+                Start review · {dueCount} due
+              </button>
+            )}
           </div>
         )}
 
