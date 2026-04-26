@@ -3,13 +3,14 @@ import { MicroMotifs, OrnateDivider } from '../components/Decorations'
 import CulturalContextTool from '../components/learn/CulturalContextTool'
 import ImportDeck from '../components/learn/ImportDeck'
 import FlashcardSession from '../components/learn/FlashcardSession'
+import CardSearch from '../components/learn/CardSearch'
 import { useFlashcards } from '../hooks/useFlashcards'
 
 export default function LearnTab() {
   const {
-    totalCards, masteredCount,
+    cards, totalCards, masteredCount,
     loaded, markReviewed, saveCulturalContext,
-    importCards, getSessionCards,
+    importCards, addCard, getSessionCards,
   } = useFlashcards()
 
   const [view, setView]           = useState('home') // 'home' | 'session'
@@ -90,20 +91,24 @@ export default function LearnTab() {
             <p style={{ color: 'var(--steel)', fontSize: '0.82rem' }}>Loading…</p>
           </div>
         ) : totalCards === 0 ? (
-          <div style={{
-            background: 'white',
-            borderRadius: '1.25rem',
-            border: '1.5px dashed rgba(232,160,160,0.3)',
-            padding: '2rem 1.5rem',
-            textAlign: 'center',
-          }}>
-            <p className="serif" style={{ fontSize:'1.1rem', color:'var(--text-mid)', fontStyle:'italic', margin:'0 0 0.5rem' }}>
-              No deck imported yet
-            </p>
-            <p style={{ fontSize:'0.78rem', color:'var(--steel)', margin:0 }}>
-              Export a deck from Anki as .apkg and import it above
-            </p>
-          </div>
+          <>
+            <div style={{
+              background: 'white',
+              borderRadius: '1.25rem',
+              border: '1.5px dashed rgba(232,160,160,0.3)',
+              padding: '2rem 1.5rem',
+              textAlign: 'center',
+              marginBottom: '1rem',
+            }}>
+              <p className="serif" style={{ fontSize:'1.1rem', color:'var(--text-mid)', fontStyle:'italic', margin:'0 0 0.5rem' }}>
+                No deck imported yet
+              </p>
+              <p style={{ fontSize:'0.78rem', color:'var(--steel)', margin:0 }}>
+                Export a deck from Anki as .apkg and import it above, or add cards manually below
+              </p>
+            </div>
+            <CardSearch cards={cards} onAdd={addCard} />
+          </>
         ) : (
           <div>
             {/* Stats */}
@@ -127,11 +132,15 @@ export default function LearnTab() {
               ))}
             </div>
 
+            {/* Search & add */}
+            <CardSearch cards={cards} onAdd={addCard} />
+
             {/* Start review */}
             <button
               onClick={startSession}
               style={{
                 width: '100%',
+                marginTop: '0.85rem',
                 padding: '0.9rem',
                 background: 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
                 border: 'none', borderRadius: '1rem',

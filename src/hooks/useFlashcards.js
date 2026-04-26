@@ -214,6 +214,15 @@ export function useFlashcards() {
   // Return a shuffled copy of all cards for a session
   const getSessionCards = useCallback(() => shuffle(cards), [cards])
 
+  // Add a single manually-created card
+  const addCard = useCallback((card) => {
+    setCards(prev => {
+      const next = [...prev, card]
+      storage.setItem(CARDS_KEY, next)
+      return next
+    })
+  }, [])
+
   const totalCards    = cards.length
   const masteredCount = cards.filter(c => c.mastered).length
 
@@ -225,6 +234,7 @@ export function useFlashcards() {
     markReviewed,
     saveCulturalContext,
     importCards,
+    addCard,
     getSessionCards,
   }
 }
