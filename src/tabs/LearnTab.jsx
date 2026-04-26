@@ -145,22 +145,27 @@ export default function LearnTab() {
             </button>
 
             {/* Clear deck */}
-            <div style={{ textAlign: 'center', marginTop: '0.6rem' }}>
-              <button
-                onClick={() => {
-                  if (confirm('Clear all cards? You can re-import your deck afterwards.')) {
-                    clearCards()
-                  }
-                }}
-                style={{
-                  background: 'none', border: 'none',
-                  fontSize: '0.72rem', color: 'var(--steel)',
-                  cursor: 'pointer', textDecoration: 'underline',
-                }}
-              >
-                Clear deck
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                if (confirm('Clear all cards? You can re-import your deck afterwards.')) {
+                  clearCards()
+                }
+              }}
+              style={{
+                width: '100%',
+                marginTop: '0.6rem',
+                padding: '0.75rem',
+                background: 'white',
+                border: '1.5px solid rgba(232,160,160,0.35)',
+                borderRadius: '1rem',
+                fontSize: '0.85rem',
+                fontWeight: 500,
+                color: 'var(--steel)',
+                cursor: 'pointer',
+              }}
+            >
+              Clear deck &amp; re-import
+            </button>
           </div>
         )}
 
