@@ -9,6 +9,14 @@ function isHanzi(text) {
   return /[一-鿿㐀-䶿]/.test(text)
 }
 
+// True when the field is mostly Chinese — used to find the hanzi field and
+// to avoid mistaking "hello (你好)" style mixed fields for hanzi.
+function isPrimarilyHanzi(text) {
+  if (!text) return false
+  const hanziCount = (text.match(/[一-鿿㐀-䶿]/g) ?? []).length
+  return hanziCount / text.replace(/\s/g, '').length > 0.4
+}
+
 function looksLikePinyin(text) {
   if (!text || text.length > 80) return false
   if (/[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)) return true   // diacritic tones
@@ -105,14 +113,16 @@ export function parseAnkiCards(db) {
       audioFile = rawFields.map(extractAudioFilename).find(Boolean) ?? null
     }
     if (!hanzi) {
-      hanzi = clean.find(f => f && isHanzi(f)) ?? null
+      // Must be predominantly Chinese, not just a mixed "hello (你好)" field
+      hanzi = clean.find(f => f && isPrimarilyHanzi(f)) ?? null
     }
     if (!pinyin) {
-      pinyin = clean.find(f => looksLikePinyin(f) && !isHanzi(f)) ?? null
+      pinyin = clean.find(f => looksLikePinyin(f) && !isPrimarilyHanzi(f)) ?? null
     }
     if (!definition) {
-      // First field that has no hanzi characters and isn't the pinyin field
-      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? ''
+      // Accept mixed fields like "hello (你好)" — only exclude fields that are
+      // primarily Chinese characters or the already-detected pinyin field
+      definition = clean.find(f => f && !isPrimarilyHanzi(f) && f !== pinyin) ?? ''
     }
 
     if (!definition && !pinyin && !hanzi) continue
@@ -129,6 +139,12 @@ export function parseAnkiCards(db) {
       culturalContext: null,
     })
   }
+
+  console.debug('[parseAnkiCards] fieldNames:', fieldNames)
+  console.debug('[parseAnkiCards] indices → pinyin:%d english:%d hanzi:%d audio:%d', pinyinIdx, englishIdx, hanziIdx, audioIdx)
+  console.debug('[parseAnkiCards] first 5 cards:', cards.slice(0, 5).map(c => ({
+    definition: c.definition, pinyin: c.pinyin, hanzi: c.hanzi, audio: c.audioFile,
+  })))
 
   return cards
 }
