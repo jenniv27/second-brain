@@ -47,10 +47,11 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
     }
 
     // Fetch cultural context if not already cached
-    if (!context) {
+    const contextWord = card.hanzi || card.pinyin || card.definition
+    if (!context && contextWord) {
       setCtxLoading(true)
       try {
-        const ctx = await fetchCulturalContext(card.pinyin || card.definition, card.definition)
+        const ctx = await fetchCulturalContext(contextWord, card.definition)
         setContext(ctx)
         onSaveCulturalContext?.(card.id, ctx)
       } catch {
@@ -86,7 +87,7 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
           minHeight: '260px',
         }}>
 
-          {/* ── Front: definition ── */}
+          {/* ── Front: definition (or hanzi if no definition) ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -102,17 +103,17 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
             <MicroMotifs count={3} />
             <p style={{
               fontFamily: 'Lora, Georgia, serif',
-              fontSize: '1.4rem',
+              fontSize: card.definition ? '1.4rem' : '2.2rem',
               fontWeight: 600,
               color: 'var(--text-dark)',
               margin: 0,
               lineHeight: 1.4,
               textAlign: 'center',
             }}>
-              {card.definition}
+              {card.definition || card.hanzi || card.pinyin}
             </p>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--steel)' }}>
-              tap to reveal
+              {card.definition ? 'tap to reveal' : 'tap for pinyin'}
             </p>
             <MicroMotifs count={3} />
           </div>
@@ -131,18 +132,39 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
             overflowY: 'auto',
           }}>
 
-            {/* Pinyin + audio button */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+            {/* Hanzi (if available) */}
+            {card.hanzi && (
               <p style={{
                 fontFamily: 'Lora, Georgia, serif',
-                fontSize: '1.7rem',
+                fontSize: '2rem',
                 fontWeight: 700,
                 color: 'var(--text-dark)',
-                margin: 0,
+                margin: '0 0 0.1rem',
                 textAlign: 'center',
+                letterSpacing: '0.05em',
               }}>
-                {card.pinyin || '—'}
+                {card.hanzi}
               </p>
+            )}
+
+            {/* Pinyin + audio button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+              {card.pinyin && (
+                <p style={{
+                  fontFamily: 'Lora, Georgia, serif',
+                  fontSize: card.hanzi ? '1.1rem' : '1.7rem',
+                  fontWeight: card.hanzi ? 400 : 700,
+                  color: card.hanzi ? 'var(--text-mid)' : 'var(--text-dark)',
+                  margin: 0,
+                  textAlign: 'center',
+                  fontStyle: card.hanzi ? 'italic' : 'normal',
+                }}>
+                  {card.pinyin}
+                </p>
+              )}
+              {!card.pinyin && !card.hanzi && (
+                <p style={{ fontFamily: 'Lora, Georgia, serif', fontSize: '1.7rem', fontWeight: 700, color: 'var(--text-dark)', margin: 0 }}>—</p>
+              )}
               {card.audioFile && (
                 <button
                   onClick={e => { e.stopPropagation(); handleAudio() }}
@@ -163,21 +185,23 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
               )}
             </div>
 
-            {/* Definition (smaller, for reference) */}
-            <p style={{
-              fontSize: '0.82rem',
-              color: 'var(--steel)',
-              margin: '0 0 1rem',
-              textAlign: 'center',
-            }}>
-              {card.definition}
-            </p>
+            {/* Definition (smaller, for reference — shown on back if it was the front prompt) */}
+            {card.definition && card.hanzi && (
+              <p style={{
+                fontSize: '0.82rem',
+                color: 'var(--steel)',
+                margin: '0 0 1rem',
+                textAlign: 'center',
+              }}>
+                {card.definition}
+              </p>
+            )}
 
             {/* Divider */}
             <div style={{
               height: '1px',
               background: 'linear-gradient(to right, transparent, rgba(232,160,160,0.4), transparent)',
-              margin: '0 0 1rem',
+              margin: '0.75rem 0 1rem',
             }} />
 
             {/* Cultural context */}

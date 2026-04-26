@@ -9,7 +9,7 @@ export default function LearnTab() {
   const {
     totalCards, masteredCount,
     loaded, markReviewed, saveCulturalContext,
-    importCards, getSessionCards,
+    importCards, clearCards, getSessionCards,
   } = useFlashcards()
 
   const [view, setView]           = useState('home') // 'home' | 'session'
@@ -143,6 +143,24 @@ export default function LearnTab() {
             >
               Start review · {totalCards} {totalCards === 1 ? 'card' : 'cards'}
             </button>
+
+            {/* Clear deck */}
+            <div style={{ textAlign: 'center', marginTop: '0.6rem' }}>
+              <button
+                onClick={() => {
+                  if (confirm('Clear all cards? You can re-import your deck afterwards.')) {
+                    clearCards()
+                  }
+                }}
+                style={{
+                  background: 'none', border: 'none',
+                  fontSize: '0.72rem', color: 'var(--steel)',
+                  cursor: 'pointer', textDecoration: 'underline',
+                }}
+              >
+                Clear deck
+              </button>
+            </div>
           </div>
         )}
 

@@ -6,13 +6,19 @@ const CARDS_KEY = 'learn:mandarin:cards'
 // ── Field detection helpers ──────────────────────────────────────
 
 function isHanzi(text) {
-  return /[一-鿿㐀-䶿]/.test(text)
+  if (!text) return false
+  const hanziCount = (text.match(/[一-鿿㐀-䶿]/g) || []).length
+  const totalChars = text.replace(/\s/g, '').length
+  // Only treat as "hanzi field" if majority of chars are hanzi
+  return totalChars > 0 && hanziCount / totalChars > 0.5
 }
 
 function looksLikePinyin(text) {
-  if (!text || text.length > 60) return false
-  // Has tone marks = almost certainly pinyin
-  return /[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)
+  if (!text || text.length > 80) return false
+  // Tone-mark pinyin: nǐ hǎo
+  if (/[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)) return true
+  // Numbered-tone pinyin: ni3 hao3 / zhong1guo2
+  return /^[a-züÜ:,;\s]+[1-5](\s|$)/i.test(text.trim())
 }
 
 function extractAudioFilename(text) {
@@ -32,37 +38,42 @@ function stripTags(html) {
     .trim()
 }
 
-function getModelFieldNames(db) {
+// Returns { modelId → [fieldName, ...] } for ALL models in the collection
+function getAllModels(db) {
   try {
     const res = db.exec('SELECT models FROM col LIMIT 1')
-    if (!res.length) return null
-    const models = JSON.parse(res[0].values[0][0])
-    const first  = models[Object.keys(models)[0]]
-    return first?.flds?.map(f => f.name.toLowerCase()) ?? null
-  } catch { return null }
+    if (!res.length) return {}
+    const raw = res[0].values[0][0]
+    if (!raw) return {}
+    const models = JSON.parse(raw)
+    return Object.fromEntries(
+      Object.entries(models).map(([id, m]) => [
+        String(id),
+        m?.flds?.map(f => f.name.toLowerCase()) ?? [],
+      ])
+    )
+  } catch { return {} }
 }
 
 function findIdx(names, patterns) {
-  if (!names) return -1
+  if (!names || !names.length) return -1
   return names.findIndex(n => patterns.some(p => n.includes(p)))
 }
 
 // ── Deck parser ──────────────────────────────────────────────────
 
 export function parseAnkiCards(db) {
-  const fieldNames = getModelFieldNames(db)
+  const allModels = getAllModels(db)
 
-  // Detect field positions by name, then fall back to content heuristics
   const pinyinPatterns  = ['pinyin', 'reading', 'romanization', 'pronunciation']
-  const englishPatterns = ['english', 'definition', 'meaning', 'translation', 'back', 'front']
+  const englishPatterns = ['english', 'definition', 'meaning', 'translation', 'gloss', 'answer', 'back']
   const audioPatterns   = ['audio', 'sound']
+  const hanziPatterns   = ['hanzi', 'chinese', 'simplified', 'mandarin', 'character',
+                           'word', 'vocab', 'expression', 'front']
 
-  let pinyinIdx  = findIdx(fieldNames, pinyinPatterns)
-  let englishIdx = findIdx(fieldNames, englishPatterns)
-  let audioIdx   = findIdx(fieldNames, audioPatterns)
-
+  // Include n.mid so we can look up the correct model for each note
   const result = db.exec(`
-    SELECT c.id, c.nid, n.flds, n.tags
+    SELECT c.id, c.nid, n.flds, n.tags, n.mid
     FROM cards c
     JOIN notes n ON c.nid = n.id
     GROUP BY c.nid
@@ -72,37 +83,53 @@ export function parseAnkiCards(db) {
 
   const cards = []
 
-  for (const [id, nid, flds, tags] of result[0].values) {
+  for (const [id, nid, flds, tags, mid] of result[0].values) {
+    // Use the field names for THIS note's model (not just the first model)
+    const fieldNames = allModels[String(mid)] ?? null
+
+    const pinyinIdx  = findIdx(fieldNames, pinyinPatterns)
+    const englishIdx = findIdx(fieldNames, englishPatterns)
+    const audioIdx   = findIdx(fieldNames, audioPatterns)
+    const hanziIdx   = findIdx(fieldNames, hanziPatterns)
+
     const rawFields = (flds ?? '').split('\x1f')
     const clean     = rawFields.map(stripTags)
 
-    // If field names didn't identify pinyin/english, use content detection
-    let pinyin     = pinyinIdx >= 0 ? clean[pinyinIdx] : null
-    let definition = englishIdx >= 0 ? clean[englishIdx] : null
-    let audioFile  = audioIdx >= 0 ? extractAudioFilename(rawFields[audioIdx]) : null
+    let pinyin     = pinyinIdx >= 0  ? (clean[pinyinIdx]  || null) : null
+    let definition = englishIdx >= 0 ? (clean[englishIdx] || null) : null
+    let audioFile  = audioIdx >= 0   ? extractAudioFilename(rawFields[audioIdx]) : null
+    let hanzi      = hanziIdx >= 0   ? (clean[hanziIdx]   || null) : null
 
-    // Content-based fallback
+    // Content-based fallbacks
     if (!audioFile) {
       audioFile = rawFields.map(extractAudioFilename).find(Boolean) ?? null
     }
+    if (!hanzi) {
+      hanzi = clean.find(f => f && isHanzi(f)) ?? null
+    }
     if (!pinyin) {
-      pinyin = clean.find(f => looksLikePinyin(f) && !isHanzi(f)) ?? null
+      pinyin = clean.find(f => f && looksLikePinyin(f) && !isHanzi(f)) ?? null
     }
     if (!definition) {
-      // First field that isn't hanzi-only and isn't the pinyin we already found
-      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? clean[0] ?? ''
+      // Prefer a field that's clearly not hanzi and not pinyin
+      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? null
+    }
+    // Last resort: first non-empty field
+    if (!definition && !pinyin) {
+      const any = clean.find(f => f)
+      if (!any) continue
+      definition = any
     }
 
-    if (!definition && !pinyin) continue
-
     cards.push({
-      id:             String(id),
-      noteId:         String(nid),
-      pinyin:         pinyin ?? '',
-      definition:     definition ?? '',
-      audioFile:      audioFile,
-      tags:           (tags ?? '').trim().split(/\s+/).filter(Boolean),
-      mastered:       false,
+      id:              String(id),
+      noteId:          String(nid),
+      hanzi:           hanzi ?? '',
+      pinyin:          pinyin ?? '',
+      definition:      definition ?? '',
+      audioFile:       audioFile,
+      tags:            (tags ?? '').trim().split(/\s+/).filter(Boolean),
+      mastered:        false,
       culturalContext: null,
     })
   }
@@ -188,8 +215,16 @@ export function useFlashcards() {
     return parsed.length
   }, [])
 
-  // Return a shuffled copy of all cards for a session
-  const getSessionCards = useCallback(() => shuffle(cards), [cards])
+  // Return a shuffled copy of cards that have something to display
+  const getSessionCards = useCallback(
+    () => shuffle(cards.filter(c => c.definition || c.pinyin || c.hanzi)),
+    [cards]
+  )
+
+  const clearCards = useCallback(() => {
+    setCards([])
+    storage.setItem(CARDS_KEY, [])
+  }, [])
 
   const totalCards    = cards.length
   const masteredCount = cards.filter(c => c.mastered).length
@@ -202,6 +237,7 @@ export function useFlashcards() {
     markReviewed,
     saveCulturalContext,
     importCards,
+    clearCards,
     getSessionCards,
   }
 }
