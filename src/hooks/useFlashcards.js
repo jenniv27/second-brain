@@ -10,9 +10,10 @@ function isHanzi(text) {
 }
 
 function looksLikePinyin(text) {
-  if (!text || text.length > 60) return false
-  // Has tone marks = almost certainly pinyin
-  return /[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)
+  if (!text || text.length > 80) return false
+  if (/[āáǎàōóǒòēéěèīíǐìūúǔùǖǘǚǜ]/.test(text)) return true   // diacritic tones
+  if (/\b[a-zA-Z]+[1-5]\b/.test(text)) return true              // numbered tones: ni3 hao3
+  return false
 }
 
 function extractAudioFilename(text) {
@@ -33,13 +34,30 @@ function stripTags(html) {
 }
 
 function getModelFieldNames(db) {
+  // Old Anki format: col.models is a JSON blob of all models
   try {
     const res = db.exec('SELECT models FROM col LIMIT 1')
-    if (!res.length) return null
-    const models = JSON.parse(res[0].values[0][0])
-    const first  = models[Object.keys(models)[0]]
-    return first?.flds?.map(f => f.name.toLowerCase()) ?? null
-  } catch { return null }
+    if (res.length) {
+      const models = JSON.parse(res[0].values[0][0])
+      const keys = Object.keys(models)
+      if (keys.length > 0) {
+        const names = models[keys[0]]?.flds?.map(f => f.name.toLowerCase())
+        if (names?.length) return names
+      }
+    }
+  } catch {}
+
+  // New Anki format (2.1.28+): models live in notetypes + fields tables
+  try {
+    const res = db.exec(
+      'SELECT name FROM fields ORDER BY ntid ASC, ord ASC LIMIT 30'
+    )
+    if (res.length && res[0].values.length) {
+      return res[0].values.map(r => String(r[0]).toLowerCase())
+    }
+  } catch {}
+
+  return null
 }
 
 function findIdx(names, patterns) {
@@ -52,13 +70,14 @@ function findIdx(names, patterns) {
 export function parseAnkiCards(db) {
   const fieldNames = getModelFieldNames(db)
 
-  // Detect field positions by name, then fall back to content heuristics
   const pinyinPatterns  = ['pinyin', 'reading', 'romanization', 'pronunciation']
-  const englishPatterns = ['english', 'definition', 'meaning', 'translation', 'back', 'front']
+  const englishPatterns = ['english', 'definition', 'meaning', 'translation', 'gloss', 'back']
+  const hanziPatterns   = ['hanzi', 'chinese', 'simplified', 'traditional', 'character', 'expression', 'vocab', 'word', 'front']
   const audioPatterns   = ['audio', 'sound']
 
   let pinyinIdx  = findIdx(fieldNames, pinyinPatterns)
   let englishIdx = findIdx(fieldNames, englishPatterns)
+  let hanziIdx   = findIdx(fieldNames, hanziPatterns)
   let audioIdx   = findIdx(fieldNames, audioPatterns)
 
   const result = db.exec(`
@@ -76,31 +95,35 @@ export function parseAnkiCards(db) {
     const rawFields = (flds ?? '').split('\x1f')
     const clean     = rawFields.map(stripTags)
 
-    // If field names didn't identify pinyin/english, use content detection
     let pinyin     = pinyinIdx >= 0 ? clean[pinyinIdx] : null
     let definition = englishIdx >= 0 ? clean[englishIdx] : null
+    let hanzi      = hanziIdx >= 0 ? clean[hanziIdx] : null
     let audioFile  = audioIdx >= 0 ? extractAudioFilename(rawFields[audioIdx]) : null
 
-    // Content-based fallback
+    // Content-based fallbacks
     if (!audioFile) {
       audioFile = rawFields.map(extractAudioFilename).find(Boolean) ?? null
+    }
+    if (!hanzi) {
+      hanzi = clean.find(f => f && isHanzi(f)) ?? null
     }
     if (!pinyin) {
       pinyin = clean.find(f => looksLikePinyin(f) && !isHanzi(f)) ?? null
     }
     if (!definition) {
-      // First field that isn't hanzi-only and isn't the pinyin we already found
-      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? clean[0] ?? ''
+      // First field that has no hanzi characters and isn't the pinyin field
+      definition = clean.find(f => f && !isHanzi(f) && f !== pinyin) ?? ''
     }
 
-    if (!definition && !pinyin) continue
+    if (!definition && !pinyin && !hanzi) continue
 
     cards.push({
       id:             String(id),
       noteId:         String(nid),
+      hanzi:          hanzi ?? '',
       pinyin:         pinyin ?? '',
       definition:     definition ?? '',
-      audioFile:      audioFile,
+      audioFile,
       tags:           (tags ?? '').trim().split(/\s+/).filter(Boolean),
       mastered:       false,
       culturalContext: null,

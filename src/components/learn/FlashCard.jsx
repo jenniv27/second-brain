@@ -50,7 +50,8 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
     if (!context) {
       setCtxLoading(true)
       try {
-        const ctx = await fetchCulturalContext(card.pinyin || card.definition, card.definition)
+        const word = card.hanzi || card.pinyin || card.definition
+        const ctx = await fetchCulturalContext(word, card.definition)
         setContext(ctx)
         onSaveCulturalContext?.(card.id, ctx)
       } catch {
@@ -131,13 +132,28 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
             overflowY: 'auto',
           }}>
 
+            {/* Hanzi */}
+            {card.hanzi && (
+              <p style={{
+                fontFamily: 'serif',
+                fontSize: '2.2rem',
+                fontWeight: 400,
+                color: 'var(--text-dark)',
+                margin: '0 0 0.1rem',
+                textAlign: 'center',
+                lineHeight: 1.2,
+              }}>
+                {card.hanzi}
+              </p>
+            )}
+
             {/* Pinyin + audio button */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
               <p style={{
                 fontFamily: 'Lora, Georgia, serif',
-                fontSize: '1.7rem',
-                fontWeight: 700,
-                color: 'var(--text-dark)',
+                fontSize: card.hanzi ? '1.1rem' : '1.7rem',
+                fontWeight: card.hanzi ? 400 : 700,
+                color: card.hanzi ? 'var(--steel)' : 'var(--text-dark)',
                 margin: 0,
                 textAlign: 'center',
               }}>
