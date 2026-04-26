@@ -103,27 +103,24 @@ export function parseAnkiCards(db) {
     const rawFields = (flds ?? '').split('\x1f')
     const clean     = rawFields.map(stripTags)
 
-    let pinyin     = pinyinIdx >= 0 ? clean[pinyinIdx] : null
-    let definition = englishIdx >= 0 ? clean[englishIdx] : null
-    let hanzi      = hanziIdx >= 0 ? clean[hanziIdx] : null
-    let audioFile  = audioIdx >= 0 ? extractAudioFilename(rawFields[audioIdx]) : null
+    let pinyin     = null
+    let definition = null
+    let hanzi      = null
+    let audioFile  = null
 
-    // Content-based fallbacks
-    if (!audioFile) {
-      audioFile = rawFields.map(extractAudioFilename).find(Boolean) ?? null
-    }
-    if (!hanzi) {
-      // Must be predominantly Chinese, not just a mixed "hello (你好)" field
-      hanzi = clean.find(f => f && isPrimarilyHanzi(f)) ?? null
-    }
-    if (!pinyin) {
-      pinyin = clean.find(f => looksLikePinyin(f) && !isPrimarilyHanzi(f)) ?? null
-    }
-    if (!definition) {
-      // Accept mixed fields like "hello (你好)" — only exclude fields that are
-      // primarily Chinese characters or the already-detected pinyin field
-      definition = clean.find(f => f && !isPrimarilyHanzi(f) && f !== pinyin) ?? ''
-    }
+    // Apply field-name indices but validate the content actually matches the
+    // expected role. If a "hanzi" field contains English (or vice-versa), the
+    // assignment is discarded so the content-based fallback can correct it.
+    if (audioIdx >= 0)  audioFile  = extractAudioFilename(rawFields[audioIdx])
+    if (hanziIdx >= 0   && isHanzi(clean[hanziIdx]))                  hanzi      = clean[hanziIdx]
+    if (pinyinIdx >= 0  && looksLikePinyin(clean[pinyinIdx]))         pinyin     = clean[pinyinIdx]
+    if (englishIdx >= 0 && !isPrimarilyHanzi(clean[englishIdx]))      definition = clean[englishIdx]
+
+    // Content-based fallbacks for anything not confirmed above
+    if (!audioFile)   audioFile  = rawFields.map(extractAudioFilename).find(Boolean) ?? null
+    if (!hanzi)       hanzi      = clean.find(f => f && isPrimarilyHanzi(f)) ?? null
+    if (!pinyin)      pinyin     = clean.find(f => looksLikePinyin(f) && !isPrimarilyHanzi(f)) ?? null
+    if (!definition)  definition = clean.find(f => f && !isPrimarilyHanzi(f) && f !== pinyin) ?? ''
 
     if (!definition && !pinyin && !hanzi) continue
 
