@@ -2,12 +2,11 @@ import { useState } from 'react'
 import { Search, Plus, X, Check } from 'lucide-react'
 
 const FIELDS = [
-  { key: 'hanzi',      label: 'Chinese',  placeholder: '你好',   font: 'serif' },
-  { key: 'pinyin',     label: 'Pinyin',   placeholder: 'nǐ hǎo', font: 'inherit' },
-  { key: 'definition', label: 'English',  placeholder: 'Hello',  font: 'inherit', required: true },
+  { key: 'definition', label: 'English', placeholder: 'Hello',   font: 'inherit', required: true },
+  { key: 'pinyin',     label: 'Pinyin',  placeholder: 'nǐ hǎo', font: 'inherit' },
 ]
 
-const EMPTY_FORM = { hanzi: '', pinyin: '', definition: '' }
+const EMPTY_FORM = { pinyin: '', definition: '' }
 
 export default function CardSearch({ cards, onAdd }) {
   const [query, setQuery]       = useState('')
@@ -50,15 +49,14 @@ export default function CardSearch({ cards, onAdd }) {
     }
 
     onAdd({
-      id:             `manual-${Date.now()}`,
-      noteId:         `manual-${Date.now()}`,
-      hanzi:          form.hanzi.trim(),
-      pinyin:         form.pinyin.trim(),
-      definition:     form.definition.trim(),
-      audioFile:      null,
-      tags:           ['manual'],
-      mastered:       false,
-      culturalContext: null,
+      id:          `manual-${Date.now()}`,
+      noteId:      `manual-${Date.now()}`,
+      hanzi:       '',
+      pinyin:      form.pinyin.trim(),
+      definition:  form.definition.trim(),
+      audioFile:   null,
+      tags:        ['manual'],
+      mastered:    false,
     })
 
     setFeedback('added')

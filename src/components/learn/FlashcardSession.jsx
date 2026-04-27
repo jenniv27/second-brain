@@ -2,7 +2,7 @@ import { useState } from 'react'
 import FlashCard from './FlashCard'
 import { MicroMotifs } from '../Decorations'
 
-export default function FlashcardSession({ sessionCards, onNext, onSaveCulturalContext, onComplete }) {
+export default function FlashcardSession({ sessionCards, onNext, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const total = sessionCards.length
@@ -76,7 +76,6 @@ export default function FlashcardSession({ sessionCards, onNext, onSaveCulturalC
       <FlashCard
         card={card}
         onNext={handleNext}
-        onSaveCulturalContext={onSaveCulturalContext}
       />
 
       {/* Quit */}

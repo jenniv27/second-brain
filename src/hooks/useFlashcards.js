@@ -286,6 +286,12 @@ export function useFlashcards() {
     })
   }, [])
 
+  // Delete all cards
+  const clearDeck = useCallback(() => {
+    setCards([])
+    storage.setItem(CARDS_KEY, [])
+  }, [])
+
   const t            = today()
   const totalCards   = cards.length
   const dueCount     = cards.filter(c => !c.dueDate || c.dueDate <= t).length
@@ -298,9 +304,9 @@ export function useFlashcards() {
     newCount,
     loaded,
     rateCard,
-    saveCulturalContext,
     importCards,
     addCard,
+    clearDeck,
     getSessionCards,
   }
 }

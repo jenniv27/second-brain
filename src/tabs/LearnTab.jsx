@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { MicroMotifs, OrnateDivider } from '../components/Decorations'
-import CulturalContextTool from '../components/learn/CulturalContextTool'
 import ImportDeck from '../components/learn/ImportDeck'
 import FlashcardSession from '../components/learn/FlashcardSession'
 import CardSearch from '../components/learn/CardSearch'
@@ -9,16 +8,23 @@ import { useFlashcards } from '../hooks/useFlashcards'
 export default function LearnTab() {
   const {
     cards, totalCards, dueCount, newCount,
-    loaded, rateCard, saveCulturalContext,
-    importCards, addCard, getSessionCards,
+    loaded, rateCard,
+    importCards, addCard, clearDeck,
+    getSessionCards,
   } = useFlashcards()
 
-  const [view, setView]            = useState('home') // 'home' | 'session'
+  const [view, setView]            = useState('home')
   const [sessionCards, setSession] = useState([])
+  const [confirmClear, setConfirmClear] = useState(false)
 
   function startSession() {
     setSession(getSessionCards())
     setView('session')
+  }
+
+  function handleClear() {
+    clearDeck()
+    setConfirmClear(false)
   }
 
   // ── Review session ───────────────────────────────────────────
@@ -43,7 +49,6 @@ export default function LearnTab() {
         <FlashcardSession
           sessionCards={sessionCards}
           onNext={rateCard}
-          onSaveCulturalContext={saveCulturalContext}
           onComplete={() => setView('home')}
         />
       </div>
@@ -74,12 +79,6 @@ export default function LearnTab() {
 
       <div style={{ padding: '1.25rem 1.1rem' }}>
 
-        <CulturalContextTool />
-
-        <div style={{ margin: '1rem 0' }}>
-          <OrnateDivider />
-        </div>
-
         {/* Flashcard section header */}
         <div style={{ marginBottom: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p style={{ margin:0, fontSize:'0.72rem', fontWeight:600, letterSpacing:'0.07em', textTransform:'uppercase', color:'var(--steel)' }}>
@@ -93,24 +92,24 @@ export default function LearnTab() {
             <p style={{ color: 'var(--steel)', fontSize: '0.82rem' }}>Loading…</p>
           </div>
         ) : totalCards === 0 ? (
-          <>
+          <div style={{ marginBottom: '1rem' }}>
             <div style={{
               background: 'white',
               borderRadius: '1.25rem',
               border: '1.5px dashed rgba(232,160,160,0.3)',
-              padding: '2rem 1.5rem',
+              padding: '1.75rem 1.5rem',
               textAlign: 'center',
               marginBottom: '1rem',
             }}>
-              <p className="serif" style={{ fontSize:'1.1rem', color:'var(--text-mid)', fontStyle:'italic', margin:'0 0 0.5rem' }}>
-                No deck imported yet
+              <p className="serif" style={{ fontSize:'1rem', color:'var(--text-mid)', fontStyle:'italic', margin:'0 0 0.4rem' }}>
+                No cards yet
               </p>
               <p style={{ fontSize:'0.78rem', color:'var(--steel)', margin:0 }}>
-                Export a deck from Anki as .apkg and import it above, or add cards manually below
+                Add your first word below
               </p>
             </div>
             <CardSearch cards={cards} onAdd={addCard} />
-          </>
+          </div>
         ) : (
           <div>
             {/* Stats */}
@@ -173,6 +172,29 @@ export default function LearnTab() {
                 Start review · {dueCount} due
               </button>
             )}
+
+            {/* Clear deck */}
+            <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+              {confirmClear ? (
+                <span style={{ fontSize: '0.75rem', color: 'var(--steel)' }}>
+                  Delete all {totalCards} cards?{' '}
+                  <button onClick={handleClear} style={{ background:'none', border:'none', cursor:'pointer', color:'#c0635a', fontWeight:600, fontSize:'0.75rem' }}>
+                    Yes, clear
+                  </button>
+                  {' · '}
+                  <button onClick={() => setConfirmClear(false)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--steel)', fontSize:'0.75rem' }}>
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <button
+                  onClick={() => setConfirmClear(true)}
+                  style={{ background:'none', border:'none', cursor:'pointer', fontSize:'0.72rem', color:'var(--steel)', textDecoration:'underline', opacity:0.6 }}
+                >
+                  Clear deck
+                </button>
+              )}
+            </div>
           </div>
         )}
 

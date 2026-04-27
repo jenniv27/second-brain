@@ -3,29 +3,15 @@ import { Volume2 } from 'lucide-react'
 import { MicroMotifs } from '../Decorations'
 import { playAudio } from '../../services/audioStorage'
 
-async function fetchCulturalContext(word, definition) {
-  const res = await fetch('/api/cultural-context', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ word, definition }),
-  })
-  if (!res.ok) throw new Error('failed')
-  return (await res.json()).context
-}
-
-export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
-  const [flipped, setFlipped]           = useState(false)
-  const [context, setContext]           = useState(card.culturalContext ?? null)
-  const [contextLoading, setCtxLoading] = useState(false)
+export default function FlashCard({ card, onNext }) {
+  const [flipped, setFlipped]         = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
-  const [done, setDone]                 = useState(false)
+  const [done, setDone]               = useState(false)
   const didAutoPlay = useRef(false)
 
-  // Reset on card change
   useEffect(() => {
     setFlipped(false)
     setDone(false)
-    setContext(card.culturalContext ?? null)
     didAutoPlay.current = false
   }, [card.id])
 
@@ -36,29 +22,12 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
     setAudioPlaying(false)
   }
 
-  async function handleFlip() {
+  function handleFlip() {
     if (done) return
     setFlipped(true)
-
-    // Auto-play audio on flip (user gesture satisfies browser policy)
     if (card.audioFile && !didAutoPlay.current) {
       didAutoPlay.current = true
       handleAudio()
-    }
-
-    // Fetch cultural context if not already cached
-    if (!context) {
-      setCtxLoading(true)
-      try {
-        const word = card.hanzi || card.pinyin || card.definition
-        const ctx = await fetchCulturalContext(word, card.definition)
-        setContext(ctx)
-        onSaveCulturalContext?.(card.id, ctx)
-      } catch {
-        setContext('Cultural context unavailable right now.')
-      } finally {
-        setCtxLoading(false)
-      }
     }
   }
 
@@ -84,7 +53,7 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
           transformStyle: 'preserve-3d',
           transition: 'transform 0.42s ease',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-          minHeight: '260px',
+          minHeight: '200px',
         }}>
 
           {/* ── Front: definition ── */}
@@ -118,7 +87,7 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
             <MicroMotifs count={3} />
           </div>
 
-          {/* ── Back: pinyin + audio + cultural context ── */}
+          {/* ── Back: pinyin + audio ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -128,32 +97,16 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
             borderRadius: '1.25rem',
             border: '1.5px solid rgba(140,155,171,0.2)',
             boxShadow: '0 4px 20px rgba(140,155,171,0.08)',
-            padding: '1.25rem',
-            overflowY: 'auto',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '1.5rem', gap: '0.5rem',
           }}>
-
-            {/* Hanzi */}
-            {card.hanzi && (
-              <p style={{
-                fontFamily: 'serif',
-                fontSize: '2.2rem',
-                fontWeight: 400,
-                color: 'var(--text-dark)',
-                margin: '0 0 0.1rem',
-                textAlign: 'center',
-                lineHeight: 1.2,
-              }}>
-                {card.hanzi}
-              </p>
-            )}
-
-            {/* Pinyin + audio button */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <p style={{
                 fontFamily: 'Lora, Georgia, serif',
-                fontSize: card.hanzi ? '1.1rem' : '1.7rem',
-                fontWeight: card.hanzi ? 400 : 700,
-                color: card.hanzi ? 'var(--steel)' : 'var(--text-dark)',
+                fontSize: '2rem',
+                fontWeight: 700,
+                color: 'var(--text-dark)',
                 margin: 0,
                 textAlign: 'center',
               }}>
@@ -171,51 +124,15 @@ export default function FlashCard({ card, onNext, onSaveCulturalContext }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: audioPlaying ? 'default' : 'pointer',
                     flexShrink: 0,
-                    transition: 'background 0.15s',
                   }}
                 >
                   <Volume2 size={13} strokeWidth={1.75} color="var(--rose)" />
                 </button>
               )}
             </div>
-
-            {/* Definition (smaller, for reference) */}
-            <p style={{
-              fontSize: '0.82rem',
-              color: 'var(--steel)',
-              margin: '0 0 1rem',
-              textAlign: 'center',
-            }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--steel)', margin: 0 }}>
               {card.definition}
             </p>
-
-            {/* Divider */}
-            <div style={{
-              height: '1px',
-              background: 'linear-gradient(to right, transparent, rgba(232,160,160,0.4), transparent)',
-              margin: '0 0 1rem',
-            }} />
-
-            {/* Cultural context */}
-            <p style={{
-              fontSize: '0.65rem', fontWeight: 600,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'var(--rose)', margin: '0 0 0.5rem',
-            }}>
-              Cultural context
-            </p>
-            {contextLoading ? (
-              <p style={{ fontSize: '0.8rem', color: 'var(--steel)', fontStyle: 'italic' }}>Generating…</p>
-            ) : context ? (
-              <p style={{
-                fontSize: '0.82rem', color: 'var(--text-mid)',
-                lineHeight: 1.65,
-                fontFamily: 'Lora, Georgia, serif', fontStyle: 'italic',
-                margin: 0, whiteSpace: 'pre-wrap',
-              }}>
-                {context}
-              </p>
-            ) : null}
           </div>
 
         </div>
