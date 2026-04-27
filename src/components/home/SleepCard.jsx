@@ -103,8 +103,7 @@ export default function SleepCard({ onGoToBody }) {
       : '—'
 
   return (
-    <button
-      onClick={onGoToBody}
+    <div
       style={{
         width: '100%',
         textAlign: 'left',
@@ -113,7 +112,6 @@ export default function SleepCard({ onGoToBody }) {
         borderRadius: '1.25rem',
         padding: '1rem 1.1rem',
         marginBottom: '0.9rem',
-        cursor: 'pointer',
         boxShadow: '0 2px 10px rgba(140,155,171,0.08)',
       }}
     >
@@ -149,10 +147,6 @@ export default function SleepCard({ onGoToBody }) {
         </p>
       )}
 
-      {/* Link hint */}
-      <p style={{ margin: '0.6rem 0 0', fontSize: '0.7rem', color: 'var(--steel)' }}>
-        Tap to open Body tab · Morning session ›
-      </p>
-    </button>
+    </div>
   )
 }

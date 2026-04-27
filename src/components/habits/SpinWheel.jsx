@@ -33,13 +33,30 @@ function weightedPick(builtSegs) {
   return builtSegs[builtSegs.length - 1]
 }
 
-export const MAIN_SEGMENTS = [
-  { id: 'T1',      label: 'T1',    pct: 40, color: '#e48fa8' },
-  { id: 'T2',      label: 'T2',    pct: 30, color: '#8b7cd4' },
-  { id: 'T3',      label: 'T3',    pct: 20, color: '#4db6ac' },
-  { id: 'BONUS',   label: 'BONUS', pct:  8, color: '#ffa000' },
-  { id: 'JACKPOT', label: '★',     pct:  2, color: '#f9a825' },
-]
+// Build 50 equal slices (7.2° each) distributed evenly so tiers interleave.
+// Probabilities encoded by count: T1×20=40%, T2×15=30%, T3×10=20%, BONUS×4=8%, JACKPOT×1=2%.
+function buildEqualWheelSegments() {
+  const TIERS = [
+    { id: 'T1',      label: 'T1', count: 20, color: '#e48fa8' },
+    { id: 'T2',      label: 'T2', count: 15, color: '#8b7cd4' },
+    { id: 'T3',      label: 'T3', count: 10, color: '#4db6ac' },
+    { id: 'BONUS',   label: 'B',  count:  4, color: '#ffa000' },
+    { id: 'JACKPOT', label: '★',  count:  1, color: '#f9a825' },
+  ]
+  const total = 50
+  const slots = new Array(total).fill(null)
+  for (const tier of TIERS) {
+    const step = total / tier.count
+    for (let i = 0; i < tier.count; i++) {
+      let pos = Math.round(i * step) % total
+      while (slots[pos] !== null) pos = (pos + 1) % total
+      slots[pos] = { id: tier.id, label: tier.label, color: tier.color, pct: 100 / total }
+    }
+  }
+  return slots
+}
+
+export const MAIN_SEGMENTS = buildEqualWheelSegments()
 
 export const BONUS_SEGMENTS = [
   { id: '75',    label: '75%',   pct: 45, color: '#e57373' },
@@ -64,9 +81,8 @@ export default function SpinWheel({ segments = MAIN_SEGMENTS, onResult, spinLabe
 
     setTotalRot(prev => {
       const curAngle = prev % 360
-      // CSS rotate(N deg) clockwise → the element angle (360-N) appears at the top.
-      // To bring targetMid to the top: set (360 - newTotalRot%360) = targetMid
-      // → newTotalRot%360 = 360 - targetMid → land = (360-targetMid - curAngle + 720) % 360
+      // CSS rotate(N deg) clockwise → element angle (360-N) appears at pointer top.
+      // To bring targetMid to top: (360 - newTotalRot%360) = targetMid → land = (360-targetMid - curAngle + 720) % 360
       const land = ((360 - targetMid) - curAngle + 720) % 360
       const extra = (5 + Math.floor(Math.random() * 3)) * 360
       return prev + extra + land
@@ -111,23 +127,23 @@ export default function SpinWheel({ segments = MAIN_SEGMENTS, onResult, spinLabe
           <circle cx={CX} cy={CY} r={R + 4} fill="rgba(0,0,0,0.06)" />
           {built.map((s, i) => {
             const midRad = toRad(s.mid)
-            const lx = CX + R * 0.63 * Math.cos(midRad)
-            const ly = CY + R * 0.63 * Math.sin(midRad)
-            const fs = s.pct >= 20 ? 16 : s.pct >= 8 ? 11 : 8
+            const lx = CX + R * 0.62 * Math.cos(midRad)
+            const ly = CY + R * 0.62 * Math.sin(midRad)
             return (
               <g key={i}>
                 <path
                   d={segPath(s.start, s.end)}
                   fill={s.color}
                   stroke="white"
-                  strokeWidth={2.5}
+                  strokeWidth={1.5}
                 />
                 <text
                   x={lx.toFixed(1)} y={ly.toFixed(1)}
                   textAnchor="middle" dominantBaseline="middle"
-                  fill="white" fontSize={fs} fontWeight="800"
+                  fill="white" fontSize={6} fontWeight="800"
                   fontFamily="DM Sans, sans-serif"
                   style={{ userSelect: 'none' }}
+                  transform={`rotate(${s.mid}, ${lx.toFixed(1)}, ${ly.toFixed(1)})`}
                 >
                   {s.label}
                 </text>

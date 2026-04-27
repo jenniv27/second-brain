@@ -6,11 +6,10 @@ import {
   SKINCARE_AM, SKINCARE_PM, SKINCARE_TO_ADD,
 } from '../data/bodyData'
 import {
-  useChecklist, useExercise, useSleep, useMorningIntention,
+  useChecklist, useExercise, useMorningIntention,
 } from '../hooks/useBodyData'
 import ChecklistSection from '../components/body/ChecklistSection'
 import ExerciseLog from '../components/body/ExerciseLog'
-import SleepLog from '../components/body/SleepLog'
 import WaterModule from '../components/goals/WaterModule'
 import { OrnateDivider, MicroMotifs, Bow } from '../components/Decorations'
 
@@ -144,7 +143,6 @@ function SessionHeader({ session, onSwitch }) {
 function MorningSession() {
   const { checked: suppChecked,  toggle: toggleSupp  } = useChecklist('supp')
   const { checked: skinChecked,  toggle: toggleSkin  } = useChecklist('skin-am')
-  const { sleep,  setSleep  } = useSleep()
   const { intention, setIntention } = useMorningIntention()
 
   return (
@@ -173,11 +171,6 @@ function MorningSession() {
       {/* Hydration */}
       <SectionCard title="Hydration" accent>
         <WaterModule />
-      </SectionCard>
-
-      {/* Wake time + feel */}
-      <SectionCard title="Sleep last night" defaultOpen={!sleep.wakeTime}>
-        <SleepLog sleep={sleep} onUpdate={setSleep} showWakeTime />
       </SectionCard>
 
       {/* Morning intention */}
