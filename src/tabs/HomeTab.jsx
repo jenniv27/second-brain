@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { BookOpen, Flower2, Target } from 'lucide-react'
+import { BookOpen, Flower2, Target, Moon } from 'lucide-react'
 import LowEffortMode from '../components/LowEffortMode'
+import LowEnergyMode from '../components/home/LowEnergyMode'
 import DBTSkillFlow from '../components/habits/DBTSkillFlow'
 import RoutineCard from '../components/RoutineCard'
 import TaskSection from '../components/home/TaskSection'
@@ -29,12 +30,17 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
   const [view, setView]                   = useState('home') // 'home' | 'goals'
   const [showDBT, setShowDBT]             = useState(false)
+  const [lowEnergy, setLowEnergy]         = useState(false)
   const { dismissed, dismiss }            = useCheckinDismissal()
   const { text, sub } = getGreeting()
   const dateStr = formatDate()
 
   if (view === 'goals') {
     return <GoalsView onBack={() => setView('home')} />
+  }
+
+  if (lowEnergy) {
+    return <LowEnergyMode onExit={() => setLowEnergy(false)} />
   }
 
   return (
@@ -88,6 +94,44 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
 
       {/* ── Content ── */}
       <div style={{ padding: '1.25rem 1.25rem 0' }}>
+
+        {/* ── Low energy toggle ── */}
+        <button
+          onClick={() => setLowEnergy(true)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            background: 'linear-gradient(135deg, #ede8f5 0%, #f5eef8 100%)',
+            border: '1.5px solid rgba(139,124,212,0.3)',
+            borderRadius: '1.25rem',
+            padding: '0.9rem 1.1rem',
+            cursor: 'pointer',
+            textAlign: 'left',
+            marginBottom: '1rem',
+            boxShadow: '0 2px 10px rgba(139,124,212,0.07)',
+          }}
+        >
+          <div style={{
+            width: '2.1rem', height: '2.1rem',
+            borderRadius: '0.65rem',
+            background: 'rgba(139,124,212,0.14)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Moon size={14} strokeWidth={1.5} color="#8b7cd4" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: '0.82rem', fontWeight: 600, color: '#8b7cd4', margin: '0 0 0.1rem' }}>
+              Low energy today?
+            </p>
+            <p style={{ fontSize: '0.72rem', color: 'var(--steel)', margin: 0 }}>
+              Tap to quiet everything down
+            </p>
+          </div>
+          <MicroMotifs count={3} />
+        </button>
 
         {/* ── Today's Routine ── */}
         <RoutineCard />
