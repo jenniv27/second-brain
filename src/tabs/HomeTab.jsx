@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BookOpen, Flower2, Target } from 'lucide-react'
 import LowEffortMode from '../components/LowEffortMode'
+import DBTSkillFlow from '../components/habits/DBTSkillFlow'
 import RoutineCard from '../components/RoutineCard'
 import TaskSection from '../components/home/TaskSection'
 import HomeBudgetCard from '../components/home/HomeBudgetCard'
@@ -27,6 +28,7 @@ function formatDate() {
 export default function HomeTab({ onGoToMoney, onGoToBody }) {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
   const [view, setView]                   = useState('home') // 'home' | 'goals'
+  const [showDBT, setShowDBT]             = useState(false)
   const { dismissed, dismiss }            = useCheckinDismissal()
   const { text, sub } = getGreeting()
   const dateStr = formatDate()
@@ -196,6 +198,18 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
             <p style={{ fontSize: '0.75rem', color: 'var(--steel)', margin: 0 }}>Add a book from your Read tab</p>
           </div>
           <MicroMotifs count={3} />
+        </div>
+
+        {/* ── I need a moment ── */}
+        {showDBT && <DBTSkillFlow onClose={() => setShowDBT(false)} />}
+        <div style={{ textAlign: 'center', margin: '0.5rem 0 0.25rem' }}>
+          <button
+            onClick={() => setShowDBT(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1.5rem' }}
+          >
+            <div style={{ fontSize: '1.1rem', color: 'var(--rose)', opacity: 0.5, marginBottom: '0.2rem' }}>✦</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--steel)', letterSpacing: '0.04em' }}>I need a moment</div>
+          </button>
         </div>
 
         {/* ── Footer ── */}

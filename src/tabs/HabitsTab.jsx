@@ -310,18 +310,7 @@ export default function HabitsTab() {
           </div>
         </div>
 
-        {/* I need a moment */}
-        <div style={{ textAlign: 'center', margin: '1.25rem 0 0.75rem' }}>
-          <button
-            onClick={() => setShowDBT(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem' }}
-          >
-            <div style={{ fontSize: '1.1rem', color: 'var(--rose)', opacity: 0.55, marginBottom: '0.2rem' }}>✦</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--steel)', letterSpacing: '0.04em' }}>I need a moment</div>
-          </button>
-        </div>
-
-        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+        <div style={{ textAlign: 'center', margin: '1.25rem 0 0.5rem' }}>
           <MicroMotifs count={5} />
         </div>
       </div>
