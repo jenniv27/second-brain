@@ -1,16 +1,12 @@
-import { Home, Leaf, Star, Sparkles, Globe, BookOpen, Coins } from 'lucide-react'
+import { Home, Sun, Sparkles } from 'lucide-react'
 
-const ICON_SIZE = 20
+const ICON_SIZE = 22
 const ICON_STROKE = 1.5
 
 const icons = {
-  home:   <Home  size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  body:   <Leaf  size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  mind:   <Star  size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  money:  <Coins size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  learn:  <Sparkles size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  world:  <Globe size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
-  read:   <BookOpen size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
+  home:    <Home     size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
+  daily:   <Sun      size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
+  hobbies: <Sparkles size={ICON_SIZE} strokeWidth={ICON_STROKE} />,
 }
 
 export default function TabBar({ tabs, activeTab, onTabChange }) {
