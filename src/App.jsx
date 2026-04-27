@@ -4,6 +4,7 @@ import HomeTab from './tabs/HomeTab'
 import BodyTab from './tabs/BodyTab'
 import MindTab from './tabs/MindTab'
 import PlaceholderTab from './tabs/PlaceholderTab'
+import ReadTab from './tabs/ReadTab'
 import MoneyTab from './tabs/MoneyTab'
 import WorldTab from './tabs/WorldTab'
 import LearnTab from './tabs/LearnTab'
@@ -30,7 +31,7 @@ function App() {
         {activeTab === 'money' && <MoneyTab />}
         {activeTab === 'learn' && <LearnTab />}
         {activeTab === 'world' && <WorldTab />}
-        {activeTab === 'read'  && <PlaceholderTab name="Read" icon="📖" />}
+        {activeTab === 'read'  && <ReadTab />}
       </div>
       <TabBar tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
