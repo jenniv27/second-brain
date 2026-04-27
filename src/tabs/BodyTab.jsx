@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Sun, Moon, ChevronDown, ChevronUp } from 'lucide-react'
+import DBTSkillFlow from '../components/habits/DBTSkillFlow'
 import {
   DAILY_SUPPLEMENTS_AM, DAILY_SUPPLEMENTS_PM, AFTERNOON_REMINDERS,
   SKINCARE_AM, SKINCARE_PM, SKINCARE_TO_ADD,
@@ -230,6 +231,7 @@ function EveningSession() {
   const { checked: skinChecked, toggle: toggleSkin } = useChecklist('skin-pm')
   const { exercise, setExercise } = useExercise()
   const [showToAdd, setShowToAdd] = useState(false)
+  const [showDBT, setShowDBT]     = useState(false)
 
   return (
     <div style={{ padding: '1rem 1.1rem 0' }}>
@@ -291,7 +293,8 @@ function EveningSession() {
         </div>
       </SectionCard>
 
-      {/* Companion placeholder */}
+      {/* Evening check-in + DBT prompt */}
+      {showDBT && <DBTSkillFlow onClose={() => setShowDBT(false)} />}
       <div className="card" style={{ padding: '1rem 1.1rem', marginBottom: '0.85rem' }}>
         <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginBottom:'0.35rem' }}>
           <Bow size={14} color="var(--rose)" opacity={0.6} />
@@ -299,9 +302,37 @@ function EveningSession() {
             Evening check-in
           </p>
         </div>
-        <p style={{ fontSize:'0.78rem', fontFamily:'Lora, Georgia, serif', fontStyle:'italic', color:'var(--steel)', margin:0 }}>
+        <p style={{ fontSize:'0.78rem', fontFamily:'Lora, Georgia, serif', fontStyle:'italic', color:'var(--steel)', margin:'0 0 1rem' }}>
           Your companion check-in is coming soon. It will read everything you logged today and respond to that.
         </p>
+        <div style={{ borderTop: '1px solid rgba(232,160,160,0.12)', paddingTop: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ margin: 0, fontSize: '0.82rem', fontFamily: 'Lora, Georgia, serif', fontStyle: 'italic', color: 'var(--text-mid)' }}>
+            One skill before you close out today?
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, marginLeft: '0.75rem' }}>
+            <button
+              onClick={() => setShowDBT(true)}
+              style={{
+                padding: '0.4rem 0.85rem',
+                background: 'rgba(232,160,160,0.12)',
+                border: '1px solid rgba(232,160,160,0.3)',
+                borderRadius: '2rem',
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: 'var(--rose)',
+                cursor: 'pointer',
+              }}
+            >
+              Open ✦
+            </button>
+            <button
+              onClick={() => {}}
+              style={{ background: 'none', border: 'none', fontSize: '0.72rem', color: 'var(--steel)', cursor: 'pointer', opacity: 0.6 }}
+            >
+              Skip
+            </button>
+          </div>
+        </div>
       </div>
 
       <OrnateDivider style={{ margin: '0.5rem 0' }} />

@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useHabits, drawRandomClip } from '../hooks/useHabits'
 import HabitSetup from '../components/habits/HabitSetup'
 import SpinWheel, { MAIN_SEGMENTS, BONUS_SEGMENTS } from '../components/habits/SpinWheel'
 import ClipInventory from '../components/habits/ClipInventory'
 import PrizeJar from '../components/habits/PrizeJar'
+import DBTSkillFlow from '../components/habits/DBTSkillFlow'
 import { MicroMotifs } from '../components/Decorations'
 
 const DEFAULT_HABIT = {
@@ -134,6 +135,7 @@ export default function HabitsTab() {
   const [bonusResult, setBonusResult] = useState(null) // segment from bonus wheel
   const [bonusPct, setBonusPct]     = useState(75)
   const [extraSpinsLeft, setExtraSpinsLeft] = useState(0)
+  const [showDBT, setShowDBT]               = useState(false)
 
   if (!loaded) {
     return (
@@ -247,6 +249,7 @@ export default function HabitsTab() {
   if (phase === 'home') {
     return (
       <div className="fade-up">
+        {showDBT && <DBTSkillFlow onClose={() => setShowDBT(false)} />}
         <header style={{
           padding: '1.25rem 1.25rem 0.9rem',
           background: 'linear-gradient(160deg, #fde8e8 0%, #fdf5f5 100%)',
@@ -307,7 +310,18 @@ export default function HabitsTab() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', margin: '1rem 0 0.5rem' }}>
+        {/* I need a moment */}
+        <div style={{ textAlign: 'center', margin: '1.25rem 0 0.75rem' }}>
+          <button
+            onClick={() => setShowDBT(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1rem' }}
+          >
+            <div style={{ fontSize: '1.1rem', color: 'var(--rose)', opacity: 0.55, marginBottom: '0.2rem' }}>✦</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--steel)', letterSpacing: '0.04em' }}>I need a moment</div>
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
           <MicroMotifs count={5} />
         </div>
       </div>
