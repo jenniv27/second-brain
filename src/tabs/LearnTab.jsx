@@ -16,6 +16,7 @@ export default function LearnTab() {
   const [view, setView]            = useState('home')
   const [sessionCards, setSession] = useState([])
   const [confirmClear, setConfirmClear] = useState(false)
+  const [reversed, setReversed]    = useState(false)
 
   function startSession() {
     setSession(getSessionCards())
@@ -48,6 +49,7 @@ export default function LearnTab() {
         </header>
         <FlashcardSession
           sessionCards={sessionCards}
+          reversed={reversed}
           onNext={rateCard}
           onComplete={() => setView('home')}
         />
@@ -136,6 +138,37 @@ export default function LearnTab() {
 
             {/* Search & add */}
             <CardSearch cards={cards} onAdd={addCard} />
+
+            {/* Direction toggle */}
+            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem' }}>
+              {[
+                { label: 'English → Pinyin', value: false },
+                { label: 'Pinyin → English', value: true  },
+              ].map(opt => (
+                <button
+                  key={String(opt.value)}
+                  onClick={() => setReversed(opt.value)}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    borderRadius: '0.65rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    border: reversed === opt.value
+                      ? '1.5px solid rgba(232,160,160,0.5)'
+                      : '1px solid rgba(140,155,171,0.2)',
+                    background: reversed === opt.value
+                      ? 'rgba(232,160,160,0.1)'
+                      : 'white',
+                    color: reversed === opt.value ? 'var(--rose)' : 'var(--steel)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
 
             {/* Start review / all caught up */}
             {allCaughtUp ? (

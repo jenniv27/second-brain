@@ -2,7 +2,7 @@ import { useState } from 'react'
 import FlashCard from './FlashCard'
 import { MicroMotifs } from '../Decorations'
 
-export default function FlashcardSession({ sessionCards, onNext, onComplete }) {
+export default function FlashcardSession({ sessionCards, reversed, onNext, onComplete }) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   const total = sessionCards.length
@@ -75,6 +75,7 @@ export default function FlashcardSession({ sessionCards, onNext, onComplete }) {
       {/* Card */}
       <FlashCard
         card={card}
+        reversed={reversed}
         onNext={handleNext}
       />
 

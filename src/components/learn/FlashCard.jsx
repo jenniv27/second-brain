@@ -3,7 +3,7 @@ import { Volume2 } from 'lucide-react'
 import { MicroMotifs } from '../Decorations'
 import { playAudio } from '../../services/audioStorage'
 
-export default function FlashCard({ card, onNext }) {
+export default function FlashCard({ card, reversed, onNext }) {
   const [flipped, setFlipped]         = useState(false)
   const [audioPlaying, setAudioPlaying] = useState(false)
   const [done, setDone]               = useState(false)
@@ -56,7 +56,7 @@ export default function FlashCard({ card, onNext }) {
           minHeight: '200px',
         }}>
 
-          {/* ── Front: definition ── */}
+          {/* ── Front ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -79,7 +79,7 @@ export default function FlashCard({ card, onNext }) {
               lineHeight: 1.4,
               textAlign: 'center',
             }}>
-              {card.definition}
+              {reversed ? (card.pinyin || '—') : card.definition}
             </p>
             <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--steel)' }}>
               tap to reveal
@@ -87,7 +87,7 @@ export default function FlashCard({ card, onNext }) {
             <MicroMotifs count={3} />
           </div>
 
-          {/* ── Back: pinyin + audio ── */}
+          {/* ── Back ── */}
           <div style={{
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
@@ -110,9 +110,9 @@ export default function FlashCard({ card, onNext }) {
                 margin: 0,
                 textAlign: 'center',
               }}>
-                {card.pinyin || '—'}
+                {reversed ? card.definition : (card.pinyin || '—')}
               </p>
-              {card.audioFile && (
+              {!reversed && card.audioFile && (
                 <button
                   onClick={e => { e.stopPropagation(); handleAudio() }}
                   disabled={audioPlaying}
@@ -131,7 +131,7 @@ export default function FlashCard({ card, onNext }) {
               )}
             </div>
             <p style={{ fontSize: '0.82rem', color: 'var(--steel)', margin: 0 }}>
-              {card.definition}
+              {reversed ? (card.pinyin || '—') : card.definition}
             </p>
           </div>
 
