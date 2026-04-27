@@ -202,13 +202,20 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
 
         {/* ── I need a moment ── */}
         {showDBT && <DBTSkillFlow onClose={() => setShowDBT(false)} />}
-        <div style={{ textAlign: 'center', margin: '0.5rem 0 0.25rem' }}>
+        <div style={{ textAlign: 'center', margin: '0.75rem 0 0.5rem' }}>
           <button
             onClick={() => setShowDBT(true)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem 1.5rem' }}
+            style={{
+              display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem',
+              background: 'rgba(232,160,160,0.07)',
+              border: '1px solid rgba(232,160,160,0.35)',
+              borderRadius: '1rem',
+              cursor: 'pointer',
+              padding: '0.65rem 1.75rem',
+            }}
           >
-            <div style={{ fontSize: '1.1rem', color: 'var(--rose)', opacity: 0.5, marginBottom: '0.2rem' }}>✦</div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--steel)', letterSpacing: '0.04em' }}>I need a moment</div>
+            <span style={{ fontSize: '1rem', color: 'var(--rose)', opacity: 0.7 }}>✦</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-mid)', letterSpacing: '0.03em' }}>I need a moment</span>
           </button>
         </div>
 

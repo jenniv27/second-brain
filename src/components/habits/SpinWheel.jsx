@@ -64,7 +64,10 @@ export default function SpinWheel({ segments = MAIN_SEGMENTS, onResult, spinLabe
 
     setTotalRot(prev => {
       const curAngle = prev % 360
-      const land = ((targetMid - curAngle) + 360) % 360
+      // CSS rotate(N deg) clockwise → the element angle (360-N) appears at the top.
+      // To bring targetMid to the top: set (360 - newTotalRot%360) = targetMid
+      // → newTotalRot%360 = 360 - targetMid → land = (360-targetMid - curAngle + 720) % 360
+      const land = ((360 - targetMid) - curAngle + 720) % 360
       const extra = (5 + Math.floor(Math.random() * 3)) * 360
       return prev + extra + land
     })
