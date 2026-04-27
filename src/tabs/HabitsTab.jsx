@@ -61,7 +61,7 @@ function BonusTimer({ pct, habit, onSuccess, onSkip }) {
         </p>
         <p style={{ margin: '0 0 1rem', fontSize: '0.82rem', color: 'var(--text-mid)' }}>
           {expired
-            ? 'Time's up — streak ends, but you keep your original reward.'
+            ? "Time’s up — streak ends, but you keep your original reward."
             : `Do ${pct}% of your habit (${habit.name})`
           }
         </p>
