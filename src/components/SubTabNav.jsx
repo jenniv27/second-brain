@@ -3,7 +3,7 @@ export default function SubTabNav({ tabs, active, onChange }) {
     <div style={{
       display: 'flex',
       gap: '0.35rem',
-      padding: '0.75rem 1.1rem 0',
+      padding: '0.75rem 1.1rem 0.85rem',
       overflowX: 'auto',
       scrollbarWidth: 'none',
     }}>
