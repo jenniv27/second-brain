@@ -21,6 +21,11 @@ function App() {
 
   const visibleTabs = lowEnergy ? TABS.filter(t => t.id === 'home') : TABS
 
+  function handleTabChange(tabId) {
+    if (lowEnergy) handleLowEnergy(false)
+    setActiveTab(tabId)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="scroll-area">
@@ -28,7 +33,7 @@ function App() {
         {activeTab === 'daily'   && <DailyTab />}
         {activeTab === 'hobbies' && <HobbiesTab />}
       </div>
-      <TabBar tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabBar tabs={visibleTabs} activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
   )
 }
