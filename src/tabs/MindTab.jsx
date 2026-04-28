@@ -5,6 +5,8 @@ import { useRoutineCompletions, useCheckinHistory, useIdentityStatements } from 
 import MindRoutineCard from '../components/mind/MindRoutineCard'
 import WeeklyCheckin from '../components/mind/WeeklyCheckin'
 import IdentityPage from '../components/mind/IdentityPage'
+import MoodTracker from '../components/mind/MoodTracker'
+import DBTTimeline from '../components/mind/DBTTimeline'
 import { OrnateDivider, Bow, Wings, MicroMotifs } from '../components/Decorations'
 
 // ── Week grid ────────────────────────────────────
@@ -178,7 +180,10 @@ export default function MindTab() {
           </div>
         )}
 
-        <OrnateDivider style={{ margin: '1rem 0' }} />
+        {/* ── Mood tracker ── */}
+        <MoodTracker />
+
+        <OrnateDivider style={{ margin: '0.25rem 0 1rem' }} />
 
         {/* ── Weekly check-in ── */}
         <div className="card card-accent" style={{ marginBottom: '0.85rem', overflow:'hidden' }}>
@@ -256,6 +261,14 @@ export default function MindTab() {
           </div>
           <span style={{ fontSize:'0.7rem', color:'var(--rose)', opacity:0.6 }}>✦</span>
         </button>
+
+        {/* ── DBT history ── */}
+        <div style={{ marginBottom: '1.25rem' }}>
+          <p style={{ fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--steel)', margin: '0 0 0.65rem' }}>
+            Skills practiced
+          </p>
+          <DBTTimeline />
+        </div>
 
         <div style={{ textAlign:'center', marginBottom:'0.75rem' }}>
           <MicroMotifs count={5} />
