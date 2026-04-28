@@ -26,11 +26,10 @@ function formatDate() {
   })
 }
 
-export default function HomeTab({ onGoToMoney, onGoToBody }) {
+export default function HomeTab({ onGoToMoney, onGoToBody, lowEnergy, onLowEnergyChange }) {
   const [lowEffortOpen, setLowEffortOpen] = useState(false)
   const [view, setView]                   = useState('home') // 'home' | 'goals'
   const [showDBT, setShowDBT]             = useState(false)
-  const [lowEnergy, setLowEnergy]         = useState(false)
   const { dismissed, dismiss }            = useCheckinDismissal()
   const { text, sub } = getGreeting()
   const dateStr = formatDate()
@@ -40,7 +39,7 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
   }
 
   if (lowEnergy) {
-    return <LowEnergyMode onExit={() => setLowEnergy(false)} />
+    return <LowEnergyMode onExit={() => onLowEnergyChange(false)} />
   }
 
   return (
@@ -97,7 +96,7 @@ export default function HomeTab({ onGoToMoney, onGoToBody }) {
 
         {/* ── Low energy toggle ── */}
         <button
-          onClick={() => setLowEnergy(true)}
+          onClick={() => onLowEnergyChange(true)}
           style={{
             width: '100%',
             display: 'flex',

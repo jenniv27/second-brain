@@ -11,16 +11,24 @@ const TABS = [
 ]
 
 function App() {
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab]   = useState('home')
+  const [lowEnergy, setLowEnergy]   = useState(false)
+
+  function handleLowEnergy(on) {
+    setLowEnergy(on)
+    if (on) setActiveTab('home')
+  }
+
+  const visibleTabs = lowEnergy ? TABS.filter(t => t.id === 'home') : TABS
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="scroll-area">
-        {activeTab === 'home'    && <HomeTab onGoToMoney={() => setActiveTab('daily')} onGoToBody={() => setActiveTab('daily')} />}
+        {activeTab === 'home'    && <HomeTab onGoToMoney={() => setActiveTab('daily')} onGoToBody={() => setActiveTab('daily')} lowEnergy={lowEnergy} onLowEnergyChange={handleLowEnergy} />}
         {activeTab === 'daily'   && <DailyTab />}
         {activeTab === 'hobbies' && <HobbiesTab />}
       </div>
-      <TabBar tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabBar tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }

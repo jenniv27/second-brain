@@ -13,7 +13,7 @@ const SUBTABS = [
 ]
 
 export default function DailyTab() {
-  const [active, setActive] = useState('habits')
+  const [active, setActive] = useState('body')
 
   return (
     <div className="fade-up">
