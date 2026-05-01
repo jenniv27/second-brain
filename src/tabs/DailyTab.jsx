@@ -3,13 +3,11 @@ import SubTabNav from '../components/SubTabNav'
 import BodyTab from './BodyTab'
 import MindTab from './MindTab'
 import MoneyTab from './MoneyTab'
-import HabitsTab from './HabitsTab'
 
 const SUBTABS = [
-  { id: 'body',   label: 'Body'   },
-  { id: 'mind',   label: 'Mind'   },
-  { id: 'money',  label: 'Money'  },
-  { id: 'habits', label: 'Habits' },
+  { id: 'body',  label: 'Body'  },
+  { id: 'mind',  label: 'Mind'  },
+  { id: 'money', label: 'Money' },
 ]
 
 export default function DailyTab() {
@@ -18,10 +16,9 @@ export default function DailyTab() {
   return (
     <div className="fade-up">
       <SubTabNav tabs={SUBTABS} active={active} onChange={setActive} />
-      {active === 'body'   && <BodyTab />}
-      {active === 'mind'   && <MindTab />}
-      {active === 'money'  && <MoneyTab />}
-      {active === 'habits' && <HabitsTab />}
+      {active === 'body'  && <BodyTab />}
+      {active === 'mind'  && <MindTab />}
+      {active === 'money' && <MoneyTab />}
     </div>
   )
 }
