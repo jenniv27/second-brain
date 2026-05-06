@@ -4,12 +4,21 @@ import QualityModal from './QualityModal'
 
 const ICONS = { morning: Sun, midday: Coffee, evening: Moon }
 
+// Returns true on even days-of-year (0-indexed), false on odd — gives a stable every-other-day cadence.
+function isEveryOtherDayOn() {
+  const start = new Date(new Date().getFullYear(), 0, 0)
+  const dayOfYear = Math.floor((Date.now() - start) / 86400000)
+  return dayOfYear % 2 === 0
+}
+
 export default function FocusRoutineCard({ routine, checks, onToggle, onComplete }) {
   const [showQuality, setShowQuality] = useState(false)
   const Icon = ICONS[routine.id] ?? Sun
 
-  const total        = routine.habits.length
-  const checkedCount = routine.habits.filter(h => checks[`${routine.id}:${h.id}`]).length
+  // Filter out every-other-day habits on their off days
+  const todayHabits  = routine.habits.filter(h => !h.everyOtherDay || isEveryOtherDayOn())
+  const total        = todayHabits.length
+  const checkedCount = todayHabits.filter(h => checks[`${routine.id}:${h.id}`]).length
   const allChecked   = checkedCount === total && total > 0
 
   function handleToggle(habitId) {
@@ -69,7 +78,7 @@ export default function FocusRoutineCard({ routine, checks, onToggle, onComplete
 
         {/* Habit list */}
         <div style={{ padding: '0.3rem 1rem 0' }}>
-          {routine.habits.map((habit, i) => {
+          {todayHabits.map((habit, i) => {
             const checked = !!checks[`${routine.id}:${habit.id}`]
             return (
               <button
@@ -82,7 +91,7 @@ export default function FocusRoutineCard({ routine, checks, onToggle, onComplete
                   gap: '0.65rem',
                   background: 'none',
                   border: 'none',
-                  borderBottom: i < routine.habits.length - 1
+                  borderBottom: i < todayHabits.length - 1
                     ? '1px solid rgba(232,160,160,0.08)'
                     : 'none',
                   padding: '0.55rem 0',
