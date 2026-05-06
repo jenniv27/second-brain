@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import * as storage from '../services/storage'
 
 function todayKey() {
@@ -76,4 +76,54 @@ export function useIdentityStatements() {
   }
 
   return { statements, addStatement }
+}
+
+// ── Per-habit checkbox state ─────────────────────────────────────
+// Key: mind:habitchecks:YYYY-MM-DD → { 'routineId:habitId': true, ... }
+export function useHabitChecks() {
+  const key = `mind:habitchecks:${todayKey()}`
+  const [checks, setChecks] = useState(() => storage.cacheRead(key, {}))
+
+  useEffect(() => {
+    storage.getItem(key, {}).then(setChecks)
+  }, [key])
+
+  const toggle = useCallback((routineId, habitId) => {
+    const hkey = `${routineId}:${habitId}`
+    setChecks(prev => {
+      const next = { ...prev, [hkey]: !prev[hkey] }
+      storage.setItem(key, next)
+      return next
+    })
+  }, [key])
+
+  return { checks, toggle }
+}
+
+// ── Consecutive-day streak ───────────────────────────────────────
+// Counts days (including today if completed) where morning or evening was done.
+export function useStreak(todayDone) {
+  const today = todayKey()
+  const doneKeys = Object.keys(todayDone).sort().join(',')
+
+  return useMemo(() => {
+    let count = 0
+    for (let i = 0; i < 365; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateKey = d.toISOString().slice(0, 10)
+      const c = dateKey === today
+        ? todayDone
+        : storage.cacheRead(`mind:completions:${dateKey}`, {})
+      const hasCompletion = c.morning || c.evening
+      if (hasCompletion) {
+        count++
+      } else if (dateKey === today) {
+        continue // today not done yet — don't break the streak
+      } else {
+        break
+      }
+    }
+    return count
+  }, [doneKeys, today]) // eslint-disable-line react-hooks/exhaustive-deps
 }

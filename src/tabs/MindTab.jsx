@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { BookOpen } from 'lucide-react'
 import { ROUTINES } from '../data/mindData'
-import { useRoutineCompletions, useCheckinHistory, useIdentityStatements } from '../hooks/useMindData'
-import MindRoutineCard from '../components/mind/MindRoutineCard'
+import { useRoutineCompletions, useCheckinHistory, useIdentityStatements, useHabitChecks, useStreak } from '../hooks/useMindData'
+import FocusRoutineCard from '../components/mind/FocusRoutineCard'
 import WeeklyCheckin from '../components/mind/WeeklyCheckin'
 import IdentityPage from '../components/mind/IdentityPage'
 import MoodTracker from '../components/mind/MoodTracker'
@@ -79,13 +79,18 @@ function WeekGrid() {
 
 // ── Main tab ─────────────────────────────────────
 export default function MindTab() {
-  const { done, complete, uncomplete } = useRoutineCompletions()
+  const { done, complete, uncomplete }  = useRoutineCompletions()
+  const { checks, toggle }              = useHabitChecks()
+  const streak                          = useStreak(done)
   const { saveCheckin, lastCheckin, daysSinceLast } = useCheckinHistory()
-  const { statements, addStatement } = useIdentityStatements()
+  const { statements, addStatement }    = useIdentityStatements()
 
-  const [view, setView]           = useState('overview') // 'overview' | 'checkin' | 'identity'
+  const [view, setView] = useState('overview') // 'overview' | 'checkin' | 'identity'
 
-  const allDone = ROUTINES.every(r => r.optional || !!done[r.id])
+  const completedRoutines = ROUTINES.filter(r => done[r.id])
+  const pendingRoutines   = ROUTINES.filter(r => !done[r.id])
+  const focusRoutine      = pendingRoutines[0] ?? null
+  const allDone           = pendingRoutines.length === 0
 
   if (view === 'checkin') {
     return (
@@ -140,9 +145,26 @@ export default function MindTab() {
         <span style={{ position:'absolute', top:'0.5rem', right:'3rem',   fontSize:'0.35rem', color:'var(--rose)', opacity:0.18 }}>°</span>
 
         <p style={{ fontSize:'0.72rem', fontWeight:500, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--steel)', margin:'0 0 0.3rem' }}>Mind</p>
-        <h1 style={{ fontFamily:'Lora, Georgia, serif', fontSize:'1.6rem', fontWeight:500, color:'var(--text-dark)', margin:'0 0 0.9rem', lineHeight:1.2 }}>
-          Your routines <span className="star-accent" style={{ fontSize:'0.9rem' }}>✦</span>
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.9rem' }}>
+          <h1 style={{ fontFamily:'Lora, Georgia, serif', fontSize:'1.6rem', fontWeight:500, color:'var(--text-dark)', margin:0, lineHeight:1.2 }}>
+            Your routines <span className="star-accent" style={{ fontSize:'0.9rem' }}>✦</span>
+          </h1>
+          {streak > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '0.3rem',
+              background: 'rgba(232,160,160,0.13)',
+              border: '1px solid rgba(232,160,160,0.3)',
+              borderRadius: '2rem',
+              padding: '0.25rem 0.7rem',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--rose)', fontFamily: 'Lora, Georgia, serif' }}>{streak}</span>
+              <span style={{ fontSize: '0.62rem', color: 'var(--steel)', letterSpacing: '0.03em' }}>
+                {streak === 1 ? 'day' : 'days'} ✦
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Week grid */}
         <WeekGrid />
@@ -156,26 +178,49 @@ export default function MindTab() {
 
       <div style={{ padding: '1.1rem 1.1rem 0' }}>
 
-        {/* ── Today's routines ── */}
-        <p style={{ fontSize:'0.7rem', fontWeight:600, letterSpacing:'0.06em', textTransform:'uppercase', color:'var(--steel)', margin:'0 0 0.65rem' }}>
-          Today
-        </p>
+        {/* ── Completed routine pills ── */}
+        {completedRoutines.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.85rem' }}>
+            {completedRoutines.map(r => (
+              <button
+                key={r.id}
+                onClick={() => uncomplete(r.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  background: 'rgba(232,160,160,0.1)',
+                  border: '1.5px solid rgba(232,160,160,0.35)',
+                  borderRadius: '2rem',
+                  padding: '0.28rem 0.7rem',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem', fontWeight: 600,
+                  color: 'var(--rose)',
+                }}
+              >
+                <span style={{ fontSize: '0.6rem' }}>✦</span>
+                {r.name}
+                <span style={{ fontSize: '0.6rem', color: 'var(--steel)', fontStyle: 'italic', fontWeight: 400 }}>
+                  {done[r.id] === 'fully' ? 'fully' : done[r.id] === 'mostly' ? 'mostly' : 'showed up'}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        {ROUTINES.map(routine => (
-          <MindRoutineCard
-            key={routine.id}
-            routine={routine}
-            done={done[routine.id] || false}
+        {/* ── Focus routine card ── */}
+        {focusRoutine && (
+          <FocusRoutineCard
+            routine={focusRoutine}
+            checks={checks}
+            onToggle={toggle}
             onComplete={complete}
-            onUncomplete={uncomplete}
           />
-        ))}
+        )}
 
-        {/* All done quiet signal */}
+        {/* ── All done ── */}
         {allDone && (
-          <div className="check-in" style={{ textAlign:'center', margin:'0.25rem 0 0.85rem' }}>
-            <p style={{ fontFamily:'Lora, Georgia, serif', fontSize:'0.82rem', fontStyle:'italic', color:'var(--steel)', margin:0 }}>
-              All routines logged. The loop is closed. <span style={{ color:'var(--rose)' }}>✦</span>
+          <div style={{ textAlign: 'center', padding: '0.5rem 0 0.85rem' }}>
+            <p style={{ fontFamily: 'Lora, Georgia, serif', fontSize: '0.88rem', fontStyle: 'italic', color: 'var(--steel)', margin: 0 }}>
+              All routines logged. The loop is closed. <span style={{ color: 'var(--rose)' }}>✦</span>
             </p>
           </div>
         )}
