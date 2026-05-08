@@ -292,6 +292,24 @@ export function useFlashcards() {
     storage.setItem(CARDS_KEY, [])
   }, [])
 
+  // Update editable fields on a single card, preserving SM-2 scheduling
+  const updateCard = useCallback((cardId, fields) => {
+    setCards(prev => {
+      const next = prev.map(c => c.id === cardId ? { ...c, ...fields } : c)
+      storage.setItem(CARDS_KEY, next)
+      return next
+    })
+  }, [])
+
+  // Delete a single card by id
+  const deleteCard = useCallback((cardId) => {
+    setCards(prev => {
+      const next = prev.filter(c => c.id !== cardId)
+      storage.setItem(CARDS_KEY, next)
+      return next
+    })
+  }, [])
+
   const t            = today()
   const totalCards   = cards.length
   const dueCount     = cards.filter(c => !c.dueDate || c.dueDate <= t).length
@@ -306,6 +324,8 @@ export function useFlashcards() {
     rateCard,
     importCards,
     addCard,
+    updateCard,
+    deleteCard,
     clearDeck,
     getSessionCards,
   }

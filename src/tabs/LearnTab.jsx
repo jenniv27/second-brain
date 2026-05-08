@@ -9,7 +9,7 @@ export default function LearnTab() {
   const {
     cards, totalCards, dueCount, newCount,
     loaded, rateCard,
-    importCards, addCard, clearDeck,
+    importCards, addCard, updateCard, deleteCard, clearDeck,
     getSessionCards,
   } = useFlashcards()
 
@@ -110,7 +110,7 @@ export default function LearnTab() {
                 Add your first word below
               </p>
             </div>
-            <CardSearch cards={cards} onAdd={addCard} />
+            <CardSearch cards={cards} onAdd={addCard} onUpdate={updateCard} onDelete={deleteCard} />
           </div>
         ) : (
           <div>
@@ -137,7 +137,7 @@ export default function LearnTab() {
             </div>
 
             {/* Search & add */}
-            <CardSearch cards={cards} onAdd={addCard} />
+            <CardSearch cards={cards} onAdd={addCard} onUpdate={updateCard} onDelete={deleteCard} />
 
             {/* Direction toggle */}
             <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.85rem' }}>
