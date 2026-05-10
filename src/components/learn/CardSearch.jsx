@@ -101,7 +101,102 @@ export default function CardSearch({ cards, onAdd, onUpdate, onDelete }) {
 
   return (
     <div>
-      {/* Search bar */}
+      {/* ── Add form (top, always accessible) ── */}
+      {showForm ? (
+        <div style={{
+          marginBottom: '0.65rem',
+          background: 'white',
+          border: '1.5px solid rgba(232,160,160,0.25)',
+          borderRadius: '1rem',
+          padding: '1rem',
+        }}>
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--steel)' }}>
+            New card
+          </p>
+
+          {ADD_FIELDS.map(({ key, label, placeholder, required }) => (
+            <div key={key} style={{ marginBottom: '0.6rem' }}>
+              <label style={{ display: 'block', fontSize: '0.68rem', color: 'var(--steel)', marginBottom: '0.2rem', letterSpacing: '0.04em' }}>
+                {label}{required ? ' *' : ''}
+              </label>
+              <input
+                value={form[key]}
+                onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
+                placeholder={placeholder}
+                onKeyDown={e => e.key === 'Enter' && canAdd && handleAdd()}
+                autoFocus={key === 'definition'}
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  border: '1px solid rgba(140,155,171,0.25)',
+                  borderRadius: '0.5rem',
+                  padding: '0.45rem 0.65rem',
+                  fontSize: '0.88rem',
+                  color: 'var(--text-dark)',
+                  outline: 'none', background: '#fafafa', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          ))}
+
+          {feedback === 'duplicate' && (
+            <p style={{ fontSize: '0.75rem', color: '#c0635a', margin: '0.4rem 0 0.6rem', fontStyle: 'italic' }}>
+              A card with that definition or pinyin already exists.
+            </p>
+          )}
+
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+            <button
+              onClick={handleAdd}
+              disabled={!canAdd || feedback === 'added'}
+              style={{
+                flex: 1, padding: '0.55rem',
+                background: feedback === 'added'
+                  ? 'rgba(232,160,160,0.4)'
+                  : 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
+                border: 'none', borderRadius: '0.65rem',
+                fontSize: '0.82rem', fontWeight: 600,
+                color: 'white', cursor: canAdd ? 'pointer' : 'default',
+                opacity: canAdd ? 1 : 0.45,
+                transition: 'background 0.2s',
+              }}
+            >
+              {feedback === 'added' ? '✓ Added' : 'Add card'}
+            </button>
+            <button
+              onClick={() => { setShowForm(false); setFeedback(null) }}
+              style={{
+                padding: '0.55rem 0.9rem', background: 'none',
+                border: '1px solid rgba(140,155,171,0.2)',
+                borderRadius: '0.65rem',
+                fontSize: '0.82rem', color: 'var(--steel)', cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => { setFeedback(null); setShowForm(true); closeEdit() }}
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
+            background: 'rgba(232,160,160,0.07)',
+            border: '1px dashed rgba(232,160,160,0.35)',
+            borderRadius: '0.85rem',
+            padding: '0.55rem 0.85rem',
+            cursor: 'pointer',
+            marginBottom: '0.65rem',
+            fontSize: '0.8rem', fontWeight: 500,
+            color: 'var(--rose)',
+          }}
+        >
+          <Plus size={13} strokeWidth={2.5} />
+          New card
+        </button>
+      )}
+
+      {/* ── Search bar ── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.5rem',
         background: 'white',
@@ -274,94 +369,6 @@ export default function CardSearch({ cards, onAdd, onUpdate, onDelete }) {
             </p>
           )}
 
-          {!showForm && !editingId && (
-            <button
-              onClick={() => { setFeedback(null); setShowForm(true) }}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                fontSize: '0.78rem', color: 'var(--rose)', fontWeight: 500,
-              }}
-            >
-              <Plus size={13} strokeWidth={2.5} />
-              {results.length === 0 ? 'Add this as a new card' : 'Add a card'}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Add form */}
-      {showForm && (
-        <div style={{
-          marginTop: '0.75rem',
-          background: 'white',
-          border: '1.5px solid rgba(232,160,160,0.25)',
-          borderRadius: '1rem',
-          padding: '1rem',
-        }}>
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--steel)' }}>
-            New card
-          </p>
-
-          {ADD_FIELDS.map(({ key, label, placeholder, required }) => (
-            <div key={key} style={{ marginBottom: '0.6rem' }}>
-              <label style={{ display: 'block', fontSize: '0.68rem', color: 'var(--steel)', marginBottom: '0.2rem', letterSpacing: '0.04em' }}>
-                {label}{required ? ' *' : ''}
-              </label>
-              <input
-                value={form[key]}
-                onChange={e => setForm(prev => ({ ...prev, [key]: e.target.value }))}
-                placeholder={placeholder}
-                onKeyDown={e => e.key === 'Enter' && canAdd && handleAdd()}
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  border: '1px solid rgba(140,155,171,0.25)',
-                  borderRadius: '0.5rem',
-                  padding: '0.45rem 0.65rem',
-                  fontSize: '0.88rem',
-                  color: 'var(--text-dark)',
-                  outline: 'none', background: '#fafafa', fontFamily: 'inherit',
-                }}
-              />
-            </div>
-          ))}
-
-          {feedback === 'duplicate' && (
-            <p style={{ fontSize: '0.75rem', color: '#c0635a', margin: '0.4rem 0 0.6rem', fontStyle: 'italic' }}>
-              A card with that definition or pinyin already exists.
-            </p>
-          )}
-
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-            <button
-              onClick={handleAdd}
-              disabled={!canAdd || feedback === 'added'}
-              style={{
-                flex: 1, padding: '0.55rem',
-                background: feedback === 'added'
-                  ? 'rgba(232,160,160,0.4)'
-                  : 'linear-gradient(135deg, var(--rose) 0%, rgba(232,160,160,0.8) 100%)',
-                border: 'none', borderRadius: '0.65rem',
-                fontSize: '0.82rem', fontWeight: 600,
-                color: 'white', cursor: canAdd ? 'pointer' : 'default',
-                opacity: canAdd ? 1 : 0.45,
-                transition: 'background 0.2s',
-              }}
-            >
-              {feedback === 'added' ? '✓ Added' : 'Add card'}
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setFeedback(null) }}
-              style={{
-                padding: '0.55rem 0.9rem', background: 'none',
-                border: '1px solid rgba(140,155,171,0.2)',
-                borderRadius: '0.65rem',
-                fontSize: '0.82rem', color: 'var(--steel)', cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       )}
     </div>
