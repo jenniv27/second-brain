@@ -94,3 +94,23 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'calendar_proxy_error', message: err?.message || String(err) })
   }
 }
+
+async function getAccessToken({ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN }) {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    client_secret: GOOGLE_CLIENT_SECRET,
+    refresh_token: GOOGLE_REFRESH_TOKEN,
+    grant_type: 'refresh_token',
+  })
+  const r = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  })
+  if (!r.ok) {
+    const text = await r.text()
+    throw new Error(`token_refresh_failed: ${text}`)
+  }
+  const data = await r.json()
+  return data.access_token
+}
